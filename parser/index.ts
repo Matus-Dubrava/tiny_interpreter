@@ -29,6 +29,7 @@ export class Parser {
             if (stmt) {
                 stmts.push(stmt);
             }
+            this.nextToken();
         }
 
         return new Program(stmts);
@@ -46,13 +47,9 @@ export class Parser {
     }
 
     parseIdentifier(): Identifier | null {
-        if (this.curTok.type !== TokenType.Ident) {
-            this.errors.push(
-                `Failed to parse identifier. Got='${this.curTok}'`
-            );
+        if (!this.expectCurTokenToBe(TokenType.Ident)) {
             return null;
         }
-
         return new Identifier(this.curTok, this.curTok.literal);
     }
 
@@ -67,21 +64,9 @@ export class Parser {
 
         this.nextToken();
 
-        if (this.curTok.type !== TokenType.Assign) {
-            this.errors.push(
-                `Failed to parse Let statement. Expected '=', got='${this.curTok.literal}'`
-            );
-        }
-
-        this.nextToken();
-
         const expr = this.parseExpression();
         if (!expr) {
             return null;
-        }
-
-        if (this.curTok.type === TokenType.Semicolon) {
-            this.nextToken();
         }
 
         return new Let(curTok, ident, new DummyExpr());
@@ -97,16 +82,11 @@ export class Parser {
             return null;
         }
 
-        if (this.curTok.type === TokenType.Semicolon) {
-            this.nextToken();
-        }
-
         return new Return(curTok, expr);
     }
 
     parseExpression(): IExpression | null {
         this.readUnilSemicolon();
-
         return new DummyExpr();
     }
 
@@ -122,5 +102,30 @@ export class Parser {
     nextToken(): void {
         this.curTok = this.peekTok;
         this.peekTok = this.lex.nextToken();
+    }
+
+    expectPeekTokenToBeAndAdvance(type: string): boolean {
+        if (type !== this.peekTok.type) {
+            this.errors.push(`Expected '${type}', got='${this.peekTok.type}'`);
+            return false;
+        }
+        this.nextToken();
+        return true;
+    }
+
+    expectPeekTokenToBe(type: string): boolean {
+        if (type != this.curTok.type) {
+            this.errors.push(`Expected '${type}', got='${this.curTok.type}'`);
+            return false;
+        }
+        return true;
+    }
+
+    expectCurTokenToBe(type: string): boolean {
+        if (type !== this.curTok.type) {
+            this.errors.push(`Expected '${type}', got='${this.curTok.type}'`);
+            return false;
+        }
+        return true;
     }
 }

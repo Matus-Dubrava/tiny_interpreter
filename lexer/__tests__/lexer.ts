@@ -160,7 +160,7 @@ test('lexer with another input', () => {
         { type: TokenType.EOF, literal: '' },
     ];
 
-    const lex = new Lexer(input, true);
+    const lex = new Lexer(input);
 
     for (const token of tests) {
         expect(lex.nextToken()).toEqual(token);
