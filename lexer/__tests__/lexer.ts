@@ -1,6 +1,6 @@
-import { TokenType, Tokenizer } from '..';
+import { TokenType, Lexer } from '..';
 
-test('test tokenizer', () => {
+test('test lexer', () => {
     const input = '=+(){},;';
 
     const tests = [
@@ -15,7 +15,7 @@ test('test tokenizer', () => {
         [TokenType.EOF, ''],
     ];
 
-    const tokenizer = new Tokenizer(input);
+    const tokenizer = new Lexer(input);
 
     tests.forEach(([expectedType, expectedLiteral]) => {
         const tok = tokenizer.nextToken();

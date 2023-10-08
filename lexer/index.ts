@@ -36,7 +36,7 @@ type Token = {
     literal: string;
 };
 
-export class Tokenizer {
+export class Lexer {
     input: string;
     position: number = 0;
     readPosition: number = 0;
