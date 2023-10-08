@@ -86,19 +86,19 @@ test('test lexer with more input', () => {
         { type: TokenType.Int, literal: '5' },
         { type: TokenType.Semicolon, literal: ';' },
         { type: TokenType.Int, literal: '5' },
-        { type: TokenType.LT, literal: '<' },
+        { type: TokenType.LessThan, literal: '<' },
         { type: TokenType.Int, literal: '10' },
-        { type: TokenType.GT, literal: '>' },
+        { type: TokenType.GreaterThan, literal: '>' },
         { type: TokenType.Int, literal: '5' },
         { type: TokenType.Semicolon, literal: ';' },
 
         { type: TokenType.If, literal: 'if' },
         { type: TokenType.LParen, literal: '(' },
         { type: TokenType.Int, literal: '5' },
-        { type: TokenType.LT, literal: '<' },
+        { type: TokenType.LessThan, literal: '<' },
         { type: TokenType.Int, literal: '10' },
         { type: TokenType.RParen, literal: ')' },
-        { type: TokenType.RBrace, literal: '{' },
+        { type: TokenType.LBrace, literal: '{' },
         { type: TokenType.Return, literal: 'return' },
         { type: TokenType.True, literal: 'true' },
         { type: TokenType.Semicolon, literal: ';' },
@@ -118,10 +118,42 @@ test('test lexer with more input', () => {
         { type: TokenType.NotEqual, literal: '!=' },
         { type: TokenType.Int, literal: '9' },
         { type: TokenType.Semicolon, literal: ';' },
-        { type: TokenType.EOF, literal: 'eof' },
+        { type: TokenType.EOF, literal: '' },
     ];
 
     const lex = new Lexer(input);
+
+    for (const token of tests) {
+        expect(lex.nextToken()).toEqual(token);
+    }
+});
+
+test('lexer with another input', () => {
+    const input = `
+        true && false;
+        false || true;
+        1 >= 2 <= 3;
+    `;
+
+    const tests = [
+        { type: TokenType.True, literal: 'true' },
+        { type: TokenType.And, literal: '&&' },
+        { type: TokenType.False, literal: 'false' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.False, literal: 'false' },
+        { type: TokenType.Or, literal: '||' },
+        { type: TokenType.True, literal: 'true' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.Int, literal: '1' },
+        { type: TokenType.GreaterThanOrEq, literal: '>=' },
+        { type: TokenType.Int, literal: '2' },
+        { type: TokenType.LessThanOrEq, literal: '<=' },
+        { type: TokenType.Int, literal: '3' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.EOF, literal: '' },
+    ];
+
+    const lex = new Lexer(input, true);
 
     for (const token of tests) {
         expect(lex.nextToken()).toEqual(token);
