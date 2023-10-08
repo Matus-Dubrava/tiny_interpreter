@@ -31,6 +31,7 @@ export const TokenType = {
     False: 'false',
     Or: '||',
     And: '&&',
+    Percent: '%',
 };
 
 type TokenType = (typeof TokenType)[keyof typeof TokenType];
@@ -84,6 +85,9 @@ export class Lexer {
         this.eatWhitespace();
 
         switch (this.ch) {
+            case '%':
+                tok = createToken(TokenType.Percent, this.ch);
+                break;
             case '=':
                 twoCharTok = this.readTwoCharToken();
                 if (twoCharTok) {

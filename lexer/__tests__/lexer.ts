@@ -133,6 +133,7 @@ test('lexer with another input', () => {
         true && false;
         false || true;
         1 >= 2 <= 3;
+        10 % 2 == 0;
     `;
 
     const tests = [
@@ -149,6 +150,12 @@ test('lexer with another input', () => {
         { type: TokenType.Int, literal: '2' },
         { type: TokenType.LessThanOrEq, literal: '<=' },
         { type: TokenType.Int, literal: '3' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.Int, literal: '10' },
+        { type: TokenType.Percent, literal: '%' },
+        { type: TokenType.Int, literal: '2' },
+        { type: TokenType.Equal, literal: '==' },
+        { type: TokenType.Int, literal: '0' },
         { type: TokenType.Semicolon, literal: ';' },
         { type: TokenType.EOF, literal: '' },
     ];
