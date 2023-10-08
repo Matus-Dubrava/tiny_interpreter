@@ -1,0 +1,111 @@
+import { Token, createToken, TokenType } from '../lexer';
+
+export interface INode {
+    tokenLiteral(): string;
+}
+
+export interface IStatement extends INode {
+    statementNode(): void;
+}
+
+export interface IExpression extends INode {
+    expressionNode(): void;
+}
+
+export class DummyExpr implements IExpression {
+    token!: Token;
+    value!: string;
+
+    constructor() {
+        this.token = createToken(TokenType.Illegal, 'DUMMY');
+        this.value = 'DUMMY';
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `DUMMY EXPRESSION`;
+    }
+}
+
+export class Program implements INode {
+    stmts: IStatement[];
+
+    constructor(stmts: IStatement[]) {
+        this.stmts = stmts;
+    }
+
+    tokenLiteral(): string {
+        if (this.stmts.length > 0) {
+            return this.stmts[0].tokenLiteral();
+        } else {
+            return '';
+        }
+    }
+}
+
+export class Return implements IStatement {
+    token: Token;
+    expr: IExpression;
+
+    constructor(token: Token, expr: IExpression) {
+        this.token = token;
+        this.expr = expr;
+    }
+
+    statementNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `return ${this.expr}`;
+    }
+}
+
+export class Let implements IStatement {
+    token: Token;
+    ident: Identifier;
+    expr: IExpression;
+
+    constructor(token: Token, ident: Identifier, expr: IExpression) {
+        this.token = token;
+        this.ident = ident;
+        this.expr = expr;
+    }
+
+    statementNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `let ${this.ident.name} = ${this.expr}`;
+    }
+}
+
+export class Identifier implements IExpression {
+    token: Token;
+    name: string;
+
+    constructor(token: Token, name: string) {
+        this.token = token;
+        this.name = name;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return this.name;
+    }
+}
