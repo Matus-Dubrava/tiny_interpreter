@@ -128,4 +128,3 @@ export function createToken(type: TokenType, literal: string): Token {
 }
 
 const tok = createToken(TokenType.Return, 'return');
-console.log(tok);
