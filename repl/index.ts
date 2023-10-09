@@ -1,5 +1,6 @@
 import * as readline from 'readline';
 import { Lexer, TokenType } from '../lexer';
+import { Parser } from '../parser';
 
 export function repl() {
     const rl = readline.createInterface({
@@ -8,18 +9,22 @@ export function repl() {
     });
 
     rl.question('>> ', (input) => {
-        let lex = new Lexer(input);
-
-        let tok = lex.nextToken();
-        while (tok.type !== TokenType.EOF) {
-            console.log(tok);
-            tok = lex.nextToken();
+        const lex = new Lexer(input);
+        const parser = new Parser(lex);
+        const program = parser.parseProgram();
+        if (parser.errors.length > 0) {
+            console.log(parser.errors);
+            rl.close();
+            return;
         }
+
+        console.log(program.toString());
 
         rl.close();
     });
 
     rl.on('SIGINT', () => {
+        console.log('\n');
         process.exit();
     });
 
