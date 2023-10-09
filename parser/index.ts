@@ -139,6 +139,9 @@ export class Parser {
     parseExpression(precedence: Precedence): IExpression | null {
         const prefixFn = this.prefixFns[this.curTok.type];
         if (!prefixFn) {
+            this.errors.push(
+                `No prefix parse function for ${this.curTok.type}`
+            );
             return null;
         }
 
