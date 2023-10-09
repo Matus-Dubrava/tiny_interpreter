@@ -36,7 +36,7 @@ export class BooleanObj implements IObject {
         return ObjectType.BOOLEAN_OBJ;
     }
 
-    inspect(): string {
+    toString(): string {
         return `${this.value}`;
     }
 }
@@ -48,7 +48,7 @@ export class NullObj implements IObject {
         return ObjectType.NULL_OBJ;
     }
 
-    inspect(): string {
+    toString(): string {
         return 'null';
     }
 }
