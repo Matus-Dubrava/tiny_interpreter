@@ -169,6 +169,8 @@ test('test parse prefix expression', () => {
         { input: '!5', expectedOperator: '!', expectedIntValue: 5 },
         { input: '-999', expectedOperator: '-', expectedIntValue: 999 },
         { input: '!0;', expectedOperator: '!', expectedIntValue: 0 },
+        { input: '!true;', expectedOperator: '!', expectedIntValue: true },
+        { input: '!false;', expectedOperator: '!', expectedIntValue: false },
     ];
 
     tests.forEach(({ input, expectedOperator, expectedIntValue }) => {
@@ -177,10 +179,8 @@ test('test parse prefix expression', () => {
         const program = parser.parseProgram();
         checkParseErrors(parser);
         expect(program.stmts.length).toEqual(1);
-        const prefixExpr = getExpression(program.stmts[0]) as PrefixExpression;
-        expect(prefixExpr).toBeInstanceOf(PrefixExpression);
-        expect(prefixExpr.operator).toEqual(expectedOperator);
-        testIntExpr(prefixExpr.expr, expectedIntValue);
+        const prefixExpr = getExpression(program.stmts[0]);
+        testPrefixExpression(prefixExpr, expectedOperator, expectedIntValue);
     });
 });
 
@@ -356,4 +356,11 @@ function testInfixExpression(
     testLiteralExpression(infixExpr.left, left);
     expect(infixExpr.operator).toEqual(operator);
     testLiteralExpression(infixExpr.right, right);
+}
+
+function testPrefixExpression(expr: IExpression, operator: string, right: any) {
+    expect(expr).toBeInstanceOf(PrefixExpression);
+    const prefixExpr = expr as PrefixExpression;
+    expect(prefixExpr.operator).toEqual(operator);
+    testLiteralExpression(prefixExpr.expr, right);
 }
