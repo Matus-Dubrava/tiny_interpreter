@@ -11,6 +11,8 @@ import {
     PrefixExpression,
     InfixExpression,
     BooleanLiteral,
+    IfExpression,
+    BlockStatement,
 } from '../ast';
 
 type PrefixParseFn = () => IExpression | null;
@@ -73,6 +75,7 @@ export class Parser {
             TokenType.LParen,
             this.parseGroupedExpression.bind(this)
         );
+        this.registerPrefixFn(TokenType.If, this.parseIfExpression.bind(this));
 
         this.registerInfixFn(
             TokenType.And,
@@ -146,8 +149,26 @@ export class Parser {
             }
             this.nextToken();
         }
-
         return new Program(stmts);
+    }
+
+    parseBlockStatement(): BlockStatement {
+        const curTok = this.curTok;
+        const stmts: IStatement[] = [];
+        this.nextToken();
+
+        while (
+            this.curTok.type !== TokenType.RBrace &&
+            this.curTok.type !== TokenType.EOF
+        ) {
+            const stmt = this.parseStatement();
+            if (stmt) {
+                stmts.push(stmt);
+            }
+            this.nextToken();
+        }
+
+        return new BlockStatement(curTok, stmts);
     }
 
     parseStatement(): IStatement | null {
@@ -297,11 +318,40 @@ export class Parser {
     }
 
     parseIfExpression(): IExpression | null {
-        const tok = this.curTok;
+        const curTok = this.curTok;
 
         this.expectPeekTokenToBeAndAdvance(TokenType.LParen);
+        this.nextToken(); // start of expression
 
-        return null;
+        const condition = this.parseExpression(Precedence.LOWEST);
+        if (!condition) {
+            return null;
+        }
+
+        if (!this.expectPeekTokenToBeAndAdvance(TokenType.RParen)) {
+            return null;
+        }
+
+        if (!this.expectPeekTokenToBeAndAdvance(TokenType.LBrace)) {
+            return null;
+        }
+
+        const consequence = this.parseBlockStatement();
+        this.nextToken();
+
+        if (this.curTok.type !== TokenType.Else) {
+            return new IfExpression(curTok, condition, consequence);
+        }
+
+        if (!this.expectPeekTokenToBeAndAdvance(TokenType.LBrace)) {
+            return null;
+        }
+
+        const alternative = this.parseBlockStatement();
+
+        this.nextToken();
+
+        return new IfExpression(curTok, condition, consequence, alternative);
     }
 
     /**

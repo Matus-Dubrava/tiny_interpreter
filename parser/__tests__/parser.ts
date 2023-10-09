@@ -91,6 +91,7 @@ test('test parse if expression', () => {
     const lexer = new Lexer(input);
     const parser = new Parser(lexer);
     const program = parser.parseProgram();
+    console.log(program);
     checkParseErrors(parser);
 
     expect(program.stmts.length).toEqual(1);
@@ -104,6 +105,26 @@ test('test parse if expression', () => {
     const consequenceExpr = (ifExpr.consequence.stmts[0] as ExpressionStatement)
         .expr;
     testIdentifier(consequenceExpr, 'x');
+});
+
+test('test parse if expression with consequence', () => {
+    const input = `if (x == y) { x; y; } else { return y + 1; }`;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+
+    expect(program.stmts.length).toEqual(1);
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(IfExpression);
+    const ifExpr = expr as IfExpression;
+
+    testInfixExpression(ifExpr.condition, 'x', '==', 'y');
+
+    expect(ifExpr.consequence.stmts.length).toEqual(2);
+    expect(ifExpr.alternative).not.toBeNull();
+    expect(ifExpr.alternative?.stmts.length).toEqual(1);
 });
 
 test('test parse list of parameters', () => {
