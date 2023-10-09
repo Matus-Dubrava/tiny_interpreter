@@ -33,6 +33,18 @@ test('test operator precendece', () => {
             input: '3 + 4 * 5 == 3 * 1 + 4 * 5',
             expected: '((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))',
         },
+        {
+            input: 'true && true == false || false',
+            expected: '((true && (true == false)) || false)',
+        },
+        {
+            input: 'true || true && false || false',
+            expected: '((true || (true && false)) || false)',
+        },
+        {
+            input: '1 > 2 && 3 < 4 || 5 > 6 && 7 < 8',
+            expected: '(((1 > 2) && (3 < 4)) || ((5 > 6) && (7 < 8)))',
+        },
     ];
 
     tests.forEach(({ input, expected }) => {
