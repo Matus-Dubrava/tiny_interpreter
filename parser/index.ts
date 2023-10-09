@@ -111,7 +111,7 @@ export class Parser {
 
         this.advanceToSemicoloIfExists();
 
-        return new Let(curTok, ident, new DummyExpr());
+        return new Let(curTok, ident, expr);
     }
 
     parseReturnStatement(): IStatement | null {

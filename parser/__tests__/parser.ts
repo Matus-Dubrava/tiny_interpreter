@@ -6,11 +6,30 @@ import {
     Return,
     ExpressionStatement,
     Int,
+    PrefixExpression,
     Identifier,
 } from '../../ast';
 import { Parser } from '../index';
 
-test('test parse prefix expression', () => {});
+test('test parse prefix expression', () => {
+    const tests = [
+        { input: '!5', expectedOperator: '!', expectedIntValue: 5 },
+        { input: '-999', expectedOperator: '-', expectedIntValue: 999 },
+        { input: '!0;', expectedOperator: '!', expectedIntValue: 0 },
+    ];
+
+    tests.forEach(({ input, expectedOperator, expectedIntValue }) => {
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParseErrors(parser);
+        expect(program.stmts.length).toEqual(1);
+        const prefixExpr = getExpression(program.stmts[0]) as PrefixExpression;
+        expect(prefixExpr).toBeInstanceOf(PrefixExpression);
+        expect(prefixExpr.operator).toEqual(expectedOperator);
+        testIntExpr(prefixExpr.expr, expectedIntValue);
+    });
+});
 
 test('test parse multiple statemenets', () => {
     const input = `
@@ -33,21 +52,28 @@ test('test parse multiple statemenets', () => {
 
 test('test parse let statement', () => {
     const tests = [
-        { input: 'let x = 5;', name: 'x' },
-        { input: 'let x = 5', name: 'x' },
-        { input: 'let y = 1;', name: 'y' },
-        { input: 'let something = 5;', name: 'something' },
+        { input: 'let x = 5;', expectedName: 'x', expectedIntValue: 5 },
+        { input: 'let x = 5', expectedName: 'x', expectedIntValue: 5 },
+        { input: 'let y = 1;', expectedName: 'y', expectedIntValue: 1 },
+        {
+            input: 'let something = 5;',
+            expectedName: 'something',
+            expectedIntValue: 5,
+        },
     ];
 
-    tests.forEach(({ input, name }) => {
+    tests.forEach(({ input, expectedName, expectedIntValue }) => {
         const lexer = new Lexer(input);
         const parser = new Parser(lexer);
         const program = parser.parseProgram();
         checkParseErrors(parser);
 
         expect(program.stmts.length).toEqual(1);
-        expect((program.stmts[0] as Let).token.type).toEqual(TokenType.Let);
-        expect((program.stmts[0] as Let).ident.name).toEqual(name);
+        expect(program.stmts[0]).toBeInstanceOf(Let);
+        const letStmt = program.stmts[0] as Let;
+        expect(letStmt.token.type).toEqual(TokenType.Let);
+        expect(letStmt.ident.name).toEqual(expectedName);
+        testIntExpr(letStmt.expr, expectedIntValue);
     });
 });
 
@@ -78,7 +104,7 @@ test('test parse integer literal', () => {
         checkParseErrors(parser);
         expect(program.stmts.length).toEqual(1);
         const expr = getExpression(program.stmts[0]);
-        testInt(expr, expectedValue);
+        testIntExpr(expr, expectedValue);
     });
 });
 
@@ -100,15 +126,18 @@ test('test parse identifier expression', () => {
     });
 });
 
-function testInt(expr: IExpression, expectedValue: number) {
+function testIntExpr(expr: IExpression, expectedValue: number) {
+    expect(expr).toBeInstanceOf(Int);
     expect((expr as Int).value).toEqual(expectedValue);
 }
 
 function testIdentifier(expr: IExpression, expectedName: string) {
+    expect(expr).toBeInstanceOf(Identifier);
     expect((expr as Identifier).name).toEqual(expectedName);
 }
 
 function getExpression(stmt: IStatement): IExpression {
+    expect(stmt).toBeInstanceOf(ExpressionStatement);
     const expr = (stmt as ExpressionStatement).expr;
     if (!expr) {
         console.error('Statement: ', stmt);

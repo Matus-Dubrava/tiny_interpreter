@@ -150,3 +150,25 @@ export class ExpressionStatement implements IStatement {
         return this.expr.toString();
     }
 }
+
+export class PrefixExpression implements IExpression {
+    token: Token;
+    operator: string;
+    expr: IExpression;
+
+    constructor(token: Token, operator: string, expr: IExpression) {
+        this.token = token;
+        this.operator = operator;
+        this.expr = expr;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `${this.operator}${this.expr.toString()}`;
+    }
+}
