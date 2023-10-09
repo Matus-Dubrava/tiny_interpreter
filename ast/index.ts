@@ -225,3 +225,56 @@ export class InfixExpression implements IExpression {
         return `(${this.left} ${this.operator} ${this.right})`;
     }
 }
+
+export class IfExpression implements IExpression {
+    token: Token;
+    condition: IExpression;
+    consequence: BlockStatement;
+    alternative: BlockStatement | null;
+
+    constructor(
+        token: Token,
+        condition: IExpression,
+        consequence: BlockStatement,
+        alternative: BlockStatement | null = null
+    ) {
+        this.token = token;
+        this.condition = condition;
+        this.consequence = consequence;
+        this.alternative = alternative;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        let out = `if (${this.condition}) {${this.consequence}}`;
+        if (this.alternative) {
+            out += `else {${this.alternative}}`;
+        }
+        return out;
+    }
+}
+
+export class BlockStatement implements IStatement {
+    token: Token;
+    stmts: IStatement[];
+
+    constructor(token: Token, stmts: IStatement[]) {
+        this.token = token;
+        this.stmts = stmts;
+    }
+
+    statementNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return this.stmts.map((stmt) => stmt.toString()).join('');
+    }
+}

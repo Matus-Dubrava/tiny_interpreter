@@ -10,6 +10,7 @@ import {
     InfixExpression,
     Identifier,
     BooleanLiteral,
+    IfExpression,
 } from '../../ast';
 import { Parser } from '../index';
 
@@ -81,6 +82,52 @@ test('test operator precendece', () => {
         const program = parser.parseProgram();
         checkParseErrors(parser);
         expect(program.toString()).toEqual(expected);
+    });
+});
+
+test('test parse if expression', () => {
+    const input = 'if (x < y) { x }';
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+
+    expect(program.stmts.length).toEqual(1);
+    expect(program.stmts[0]).toBeInstanceOf(ExpressionStatement);
+    const expr = (program.stmts[0] as ExpressionStatement).expr;
+    expect(expr).toBeInstanceOf(IfExpression);
+    const ifExpr = expr as IfExpression;
+    testInfixExpression(ifExpr.condition, 'x', '<', 'y');
+    expect(ifExpr.consequence.stmts.length).toEqual(1);
+    expect(ifExpr.consequence.stmts[0]).toBeInstanceOf(ExpressionStatement);
+    const consequenceExpr = (ifExpr.consequence.stmts[0] as ExpressionStatement)
+        .expr;
+    testIdentifier(consequenceExpr, 'x');
+});
+
+test('test parse list of parameters', () => {
+    const tests = [
+        { input: '()', expectedLen: 0, expectedList: [] },
+        { input: '(x)', expectedLen: 1, expectedList: ['x'] },
+        { input: '(x, y)', expectedLen: 2, expectedList: ['x', 'y'] },
+        {
+            input: '(x, y, foobar)',
+            expectedLen: 3,
+            expectedList: ['x', 'y', 'foobar'],
+        },
+    ];
+
+    tests.forEach(({ input, expectedLen, expectedList }) => {
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const parameters = parser.parseListOfParameters();
+
+        expect(parameters).not.toBeNull();
+        expect(parameters?.length).toBe(expectedLen);
+        parameters?.forEach((param, i) => {
+            testIdentifier(param, expectedList[i]);
+        });
     });
 });
 

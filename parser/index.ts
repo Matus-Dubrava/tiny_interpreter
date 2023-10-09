@@ -289,9 +289,47 @@ export class Parser {
 
         const expr = this.parseExpression(Precedence.LOWEST);
 
-        this.expectPeekTokenToBeAndAdvance(TokenType.RParen);
+        if (!this.expectPeekTokenToBeAndAdvance(TokenType.RParen)) {
+            return null;
+        }
 
         return expr;
+    }
+
+    parseIfExpression(): IExpression | null {
+        const tok = this.curTok;
+
+        this.expectPeekTokenToBeAndAdvance(TokenType.LParen);
+
+        return null;
+    }
+
+    /**
+     * Produces list of identifiers.
+     * leaves the current token at closing `)`.
+     */
+    parseListOfParameters(): Identifier[] | null {
+        const params: Identifier[] = [];
+        while (this.peekTok.type !== TokenType.RParen) {
+            this.nextToken();
+            const ident = this.parseIdentifier();
+            params.push(ident);
+            if (
+                this.peekTok.type !== TokenType.Comma &&
+                this.peekTok.type !== TokenType.RParen
+            ) {
+                this.errors.push(
+                    `Failed to parse parameters. Expected ',' or ')', got='${this.peekTok.type}'`
+                );
+                return null;
+            }
+
+            if (this.peekTok.type === TokenType.Comma) {
+                this.nextToken();
+            }
+        }
+        this.nextToken();
+        return params;
     }
 
     readUnilSemicolon(): void {
