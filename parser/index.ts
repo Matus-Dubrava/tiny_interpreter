@@ -69,6 +69,10 @@ export class Parser {
         );
         this.registerPrefixFn(TokenType.True, this.parseBool.bind(this));
         this.registerPrefixFn(TokenType.False, this.parseBool.bind(this));
+        this.registerPrefixFn(
+            TokenType.LParen,
+            this.parseGroupedExpression.bind(this)
+        );
 
         this.registerInfixFn(
             TokenType.And,
@@ -278,6 +282,16 @@ export class Parser {
         }
 
         return new InfixExpression(curTok, left, curTok.literal, expr);
+    }
+
+    parseGroupedExpression(): IExpression | null {
+        this.nextToken();
+
+        const expr = this.parseExpression(Precedence.LOWEST);
+
+        this.expectPeekTokenToBeAndAdvance(TokenType.RParen);
+
+        return expr;
     }
 
     readUnilSemicolon(): void {
