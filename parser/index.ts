@@ -407,8 +407,6 @@ export class Parser {
 
         const body = this.parseBlockStatement();
 
-        this.nextToken();
-
         return new FunctionLiteral(curTok, params, body);
     }
 
