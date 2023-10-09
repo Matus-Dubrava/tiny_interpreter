@@ -13,6 +13,7 @@ import {
     BooleanLiteral,
     IfExpression,
     BlockStatement,
+    FunctionLiteral,
 } from '../ast';
 
 type PrefixParseFn = () => IExpression | null;
@@ -76,6 +77,10 @@ export class Parser {
             this.parseGroupedExpression.bind(this)
         );
         this.registerPrefixFn(TokenType.If, this.parseIfExpression.bind(this));
+        this.registerPrefixFn(
+            TokenType.Function,
+            this.parseFunctionLiteral.bind(this)
+        );
 
         this.registerInfixFn(
             TokenType.And,
@@ -354,9 +359,28 @@ export class Parser {
         return new IfExpression(curTok, condition, consequence, alternative);
     }
 
+    parseFunctionLiteral(): IExpression | null {
+        const curTok = this.curTok;
+
+        this.expectPeekTokenToBeAndAdvance(TokenType.LParen);
+
+        const params = this.parseListOfParameters();
+        if (!params) {
+            return null;
+        }
+
+        this.expectPeekTokenToBeAndAdvance(TokenType.LBrace);
+
+        const body = this.parseBlockStatement();
+
+        this.nextToken();
+
+        return new FunctionLiteral(curTok, params, body);
+    }
+
     /**
      * Produces list of identifiers.
-     * leaves the current token at closing `)`.
+     * Leaves the current token at closing `)`.
      */
     parseListOfParameters(): Identifier[] | null {
         const params: Identifier[] = [];

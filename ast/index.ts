@@ -278,3 +278,27 @@ export class BlockStatement implements IStatement {
         return this.stmts.map((stmt) => stmt.toString()).join('');
     }
 }
+
+export class FunctionLiteral implements IExpression {
+    token: Token;
+    parameters: Identifier[];
+    body: BlockStatement;
+
+    constructor(token: Token, parameters: Identifier[], body: BlockStatement) {
+        this.token = token;
+        this.parameters = parameters;
+        this.body = body;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `fn (${this.parameters
+            .map((param) => param.toString())
+            .join(',')}) ${this.body.toString()}`;
+    }
+}
