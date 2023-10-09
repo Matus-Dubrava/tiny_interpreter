@@ -5,7 +5,7 @@ import {
     Let,
     Return,
     ExpressionStatement,
-    Int,
+    IntLiteral,
     PrefixExpression,
     InfixExpression,
     Identifier,
@@ -465,8 +465,8 @@ test('test parse identifier expression', () => {
 });
 
 function testIntExpr(expr: IExpression, expectedValue: number) {
-    expect(expr).toBeInstanceOf(Int);
-    expect((expr as Int).value).toEqual(expectedValue);
+    expect(expr).toBeInstanceOf(IntLiteral);
+    expect((expr as IntLiteral).value).toEqual(expectedValue);
 }
 
 function testIdentifier(expr: IExpression, expectedName: string) {

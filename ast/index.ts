@@ -115,7 +115,7 @@ export class Identifier implements IExpression {
     }
 }
 
-export class Int implements IExpression {
+export class IntLiteral implements IExpression {
     token: Token;
     value: number;
 

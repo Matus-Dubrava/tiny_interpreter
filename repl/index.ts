@@ -1,5 +1,5 @@
 import * as readline from 'readline';
-import { Lexer, TokenType } from '../lexer';
+import { Lexer } from '../lexer';
 import { Parser } from '../parser';
 
 export function repl() {

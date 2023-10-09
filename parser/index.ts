@@ -6,7 +6,7 @@ import {
     IStatement,
     IExpression,
     Identifier,
-    Int,
+    IntLiteral,
     ExpressionStatement,
     PrefixExpression,
     InfixExpression,
@@ -206,7 +206,7 @@ export class Parser {
     }
 
     parseInt(): IExpression {
-        return new Int(this.curTok, Number(this.curTok.literal));
+        return new IntLiteral(this.curTok, Number(this.curTok.literal));
     }
 
     parseBool(): IExpression {
