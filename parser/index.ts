@@ -259,7 +259,7 @@ export class Parser {
         const curTok = this.curTok;
         this.nextToken();
 
-        const expr = this.parseExpression(Precedence.LOWEST);
+        const expr = this.parseExpression(Precedence.PREFIX);
         if (!expr) {
             return null;
         }

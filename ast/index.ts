@@ -47,6 +47,10 @@ export class Program implements INode {
             return '';
         }
     }
+
+    toString() {
+        return this.stmts.map((stmt) => stmt.toString()).join('');
+    }
 }
 
 export class Return implements IStatement {
@@ -189,7 +193,7 @@ export class PrefixExpression implements IExpression {
     }
 
     toString(): string {
-        return `${this.operator}${this.expr.toString()}`;
+        return `(${this.operator}${this.expr.toString()})`;
     }
 }
 
