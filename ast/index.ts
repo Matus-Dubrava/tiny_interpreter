@@ -2,6 +2,7 @@ import { Token, createToken, TokenType } from '../lexer';
 
 export interface INode {
     tokenLiteral(): string;
+    toString(): string;
 }
 
 export interface IStatement extends INode {
@@ -107,5 +108,45 @@ export class Identifier implements IExpression {
 
     toString(): string {
         return this.name;
+    }
+}
+
+export class Int implements IExpression {
+    token: Token;
+    value: number;
+
+    constructor(token: Token, value: number) {
+        this.token = token;
+        this.value = value;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return this.token.literal;
+    }
+}
+
+export class ExpressionStatement implements IStatement {
+    token: Token;
+    expr: IExpression;
+
+    constructor(token: Token, expr: IExpression) {
+        this.token = token;
+        this.expr = expr;
+    }
+
+    statementNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return this.expr.toString();
     }
 }
