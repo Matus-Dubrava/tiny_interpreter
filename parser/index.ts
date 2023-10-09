@@ -5,10 +5,10 @@ import {
     Return,
     IStatement,
     IExpression,
-    DummyExpr,
     Identifier,
     Int,
     ExpressionStatement,
+    PrefixExpression,
 } from '../ast';
 
 type PrefixParseFn = (parser: Parser) => IExpression | null;
@@ -37,8 +37,16 @@ export class Parser {
         this.curTok = lex.nextToken();
         this.peekTok = lex.nextToken();
 
-        this.registerPrefixFn(TokenType.Int, this.parseInt);
-        this.registerPrefixFn(TokenType.Ident, this.parseIdentifier);
+        this.registerPrefixFn(TokenType.Int, this.parseInt.bind(this));
+        this.registerPrefixFn(TokenType.Ident, this.parseIdentifier.bind(this));
+        this.registerPrefixFn(
+            TokenType.Minus,
+            this.parsePrefixExpression.bind(this)
+        );
+        this.registerPrefixFn(
+            TokenType.Bang,
+            this.parsePrefixExpression.bind(this)
+        );
     }
 
     registerPrefixFn(tokenType: string, fn: PrefixParseFn): void {
@@ -86,12 +94,12 @@ export class Parser {
         return new ExpressionStatement(curTok, expr);
     }
 
-    parseInt(parser: Parser): IExpression {
-        return new Int(parser.curTok, Number(parser.curTok.literal));
+    parseInt(): IExpression {
+        return new Int(this.curTok, Number(this.curTok.literal));
     }
 
-    parseIdentifier(parser: Parser): Identifier {
-        return new Identifier(parser.curTok, parser.curTok.literal);
+    parseIdentifier(): Identifier {
+        return new Identifier(this.curTok, this.curTok.literal);
     }
 
     parseLetStatement(): IStatement | null {
@@ -137,6 +145,22 @@ export class Parser {
         const leftExpr = prefixFn(this);
 
         return leftExpr;
+    }
+
+    /**
+     * Prefix expression form: <operator><expression>
+     * i.e. -5, !true, -(1 + 2)
+     */
+    parsePrefixExpression(): IExpression | null {
+        const curTok = this.curTok;
+        this.nextToken();
+
+        const expr = this.parseExpression(Precedence.LOWEST);
+        if (!expr) {
+            return null;
+        }
+
+        return new PrefixExpression(curTok, curTok.literal, expr);
     }
 
     readUnilSemicolon(): void {
