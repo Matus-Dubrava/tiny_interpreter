@@ -9,6 +9,7 @@ import {
     PrefixExpression,
     InfixExpression,
     Identifier,
+    BooleanLiteral,
 } from '../../ast';
 import { Parser } from '../index';
 
@@ -83,6 +84,63 @@ test('test parse infix expression', () => {
             expect(infixExpr.operator).toEqual(expectedOperator);
             testIntExpr(infixExpr.left, expectedLeftValue);
             testIntExpr(infixExpr.right, expectedRightValue);
+        }
+    );
+});
+
+test('test parse boolean expression', () => {
+    const tests = [
+        {
+            input: 'true == true;',
+            expectedLeftValue: true,
+            expectedOperator: '==',
+            expectedRightValue: true,
+        },
+        {
+            input: 'true != false;',
+            expectedLeftValue: true,
+            expectedOperator: '!=',
+            expectedRightValue: false,
+        },
+        {
+            input: 'false && false;',
+            expectedLeftValue: false,
+            expectedOperator: '&&',
+            expectedRightValue: false,
+        },
+        {
+            input: 'true || false;',
+            expectedLeftValue: true,
+            expectedOperator: '||',
+            expectedRightValue: false,
+        },
+    ];
+
+    tests.forEach(
+        ({
+            input,
+            expectedLeftValue,
+            expectedOperator,
+            expectedRightValue,
+        }) => {
+            const lexer = new Lexer(input);
+            const parser = new Parser(lexer);
+            const program = parser.parseProgram();
+            checkParseErrors(parser);
+            expect(program.stmts.length).toEqual(1);
+
+            const expr = getExpression(program.stmts[0]);
+            expect(expr).toBeInstanceOf(InfixExpression);
+            const infixExpr = expr as InfixExpression;
+            expect(infixExpr.operator).toEqual(expectedOperator);
+            expect(infixExpr.left).toBeInstanceOf(BooleanLiteral);
+            expect((infixExpr.left as BooleanLiteral).value).toEqual(
+                expectedLeftValue
+            );
+            expect(infixExpr.right).toBeInstanceOf(BooleanLiteral);
+            expect((infixExpr.right as BooleanLiteral).value).toEqual(
+                expectedRightValue
+            );
         }
     );
 });
@@ -181,6 +239,24 @@ test('test parse integer literal', () => {
         expect(program.stmts.length).toEqual(1);
         const expr = getExpression(program.stmts[0]);
         testIntExpr(expr, expectedValue);
+    });
+});
+
+test('test parse boolean literal', () => {
+    const tests = [
+        { input: 'true;', expectedValue: true },
+        { input: 'false;', expectedValue: false },
+    ];
+
+    tests.forEach(({ input, expectedValue }) => {
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParseErrors(parser);
+        expect(program.stmts.length).toEqual(1);
+        const expr = getExpression(program.stmts[0]);
+        expect(expr).toBeInstanceOf(BooleanLiteral);
+        expect((expr as BooleanLiteral).value).toEqual(expectedValue);
     });
 });
 

@@ -10,6 +10,7 @@ import {
     ExpressionStatement,
     PrefixExpression,
     InfixExpression,
+    BooleanLiteral,
 } from '../ast';
 
 type PrefixParseFn = () => IExpression | null;
@@ -66,6 +67,8 @@ export class Parser {
             TokenType.Bang,
             this.parsePrefixExpression.bind(this)
         );
+        this.registerPrefixFn(TokenType.True, this.parseBool.bind(this));
+        this.registerPrefixFn(TokenType.False, this.parseBool.bind(this));
 
         this.registerInfixFn(
             TokenType.And,
@@ -168,6 +171,14 @@ export class Parser {
 
     parseInt(): IExpression {
         return new Int(this.curTok, Number(this.curTok.literal));
+    }
+
+    parseBool(): IExpression {
+        if (this.curTok.literal === 'true') {
+            return new BooleanLiteral(this.curTok, true);
+        } else {
+            return new BooleanLiteral(this.curTok, false);
+        }
     }
 
     parseIdentifier(): Identifier {
