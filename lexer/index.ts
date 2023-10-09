@@ -34,10 +34,10 @@ export const TokenType = {
     Percent: '%',
 };
 
-type TokenType = (typeof TokenType)[keyof typeof TokenType];
+export type TokenItem = (typeof TokenType)[keyof typeof TokenType];
 
 export type Token = {
-    type: TokenType;
+    type: TokenItem;
     literal: string;
 };
 
@@ -264,11 +264,9 @@ export class Lexer {
     }
 }
 
-export function createToken(type: TokenType, literal: string): Token {
+export function createToken(type: TokenItem, literal: string): Token {
     return {
         type,
         literal,
     };
 }
-
-const tok = createToken(TokenType.Return, 'return');

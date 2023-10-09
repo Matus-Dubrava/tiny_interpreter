@@ -10,6 +10,8 @@ import {
 } from '../../ast';
 import { Parser } from '../index';
 
+test('test parse prefix expression', () => {});
+
 test('test parse multiple statemenets', () => {
     const input = `
         let x = 5;

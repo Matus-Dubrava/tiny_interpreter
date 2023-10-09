@@ -14,6 +14,16 @@ import {
 type PrefixParseFn = (parser: Parser) => IExpression | null;
 type InfixParseFn = (parser: Parser, left: IExpression) => IExpression | null;
 
+enum Precedence {
+    LOWEST,
+    EQUALS,
+    LESSGREATER,
+    SUM,
+    PRODUCT,
+    PREFIX,
+    CALL,
+}
+
 export class Parser {
     lex: Lexer;
     curTok!: Token;
@@ -66,7 +76,7 @@ export class Parser {
 
     parseExpressionStatement(): IStatement | null {
         const curTok = this.curTok;
-        const expr = this.parseExpression();
+        const expr = this.parseExpression(Precedence.LOWEST);
         if (!expr) {
             return null;
         }
@@ -94,7 +104,7 @@ export class Parser {
 
         this.nextToken();
 
-        const expr = this.parseExpression();
+        const expr = this.parseExpression(Precedence.LOWEST);
         if (!expr) {
             return null;
         }
@@ -108,7 +118,7 @@ export class Parser {
         const curTok = this.curTok;
         this.nextToken();
 
-        const expr = this.parseExpression();
+        const expr = this.parseExpression(Precedence.LOWEST);
         if (!expr) {
             return null;
         }
@@ -118,7 +128,7 @@ export class Parser {
         return new Return(curTok, expr);
     }
 
-    parseExpression(): IExpression | null {
+    parseExpression(precedence: Precedence): IExpression | null {
         const prefixFn = this.prefixFns[this.curTok.type];
         if (!prefixFn) {
             return null;
