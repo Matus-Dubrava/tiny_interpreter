@@ -1,15 +1,15 @@
-type ObjectType = string;
+export const ObjectType = {
+    INTEGER_OBJ: 'INTEGER',
+    BOOLEAN_OBJ: 'BOOLEAN',
+    NULL_OBJ: 'NULL',
+} as const;
 
-const INTEGER_OBJ = 'INTEGER';
-const BOOLEAN_OBJ = 'BOOLEAN';
-const NULL_OBJ = 'NULL';
-
-interface IObject {
-    getType(): ObjectType;
+export interface IObject {
+    getType(): string;
     inspect(): string;
 }
 
-class IntObj implements IObject {
+export class IntObj implements IObject {
     value: number;
 
     constructor(value: number) {
@@ -17,7 +17,7 @@ class IntObj implements IObject {
     }
 
     getType(): string {
-        return INTEGER_OBJ;
+        return ObjectType.INTEGER_OBJ;
     }
 
     inspect(): string {
@@ -25,7 +25,7 @@ class IntObj implements IObject {
     }
 }
 
-class BooleanObj implements IObject {
+export class BooleanObj implements IObject {
     value: boolean;
 
     constructor(value: boolean) {
@@ -33,7 +33,7 @@ class BooleanObj implements IObject {
     }
 
     getType(): string {
-        return BOOLEAN_OBJ;
+        return ObjectType.BOOLEAN_OBJ;
     }
 
     inspect(): string {
@@ -41,11 +41,11 @@ class BooleanObj implements IObject {
     }
 }
 
-class NullObj implements IObject {
+export class NullObj implements IObject {
     value: null = null;
 
     getType(): string {
-        return NULL_OBJ;
+        return ObjectType.NULL_OBJ;
     }
 
     inspect(): string {
