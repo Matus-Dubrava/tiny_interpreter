@@ -14,6 +14,7 @@ import {
     IfExpression,
     BlockStatement,
     FunctionLiteral,
+    CallExpression,
 } from '../ast';
 
 type PrefixParseFn = () => IExpression | null;
@@ -45,6 +46,7 @@ const operatorPrecedence = {
     [TokenType.Percent]: Precedence.PRODUCT,
     [TokenType.And]: Precedence.LOGICAL_AND,
     [TokenType.Or]: Precedence.LOGICAL_OR,
+    [TokenType.LParen]: Precedence.CALL,
 } as const;
 
 export class Parser {
@@ -133,6 +135,10 @@ export class Parser {
         this.registerInfixFn(
             TokenType.GreaterThanOrEq,
             this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.LParen,
+            this.parseCallExpression.bind(this)
         );
     }
 
@@ -357,6 +363,34 @@ export class Parser {
         this.nextToken();
 
         return new IfExpression(curTok, condition, consequence, alternative);
+    }
+
+    parseCallExpression(left: IExpression): IExpression | null {
+        const curTok = this.curTok;
+        const args: IExpression[] = [];
+
+        while (this.curTok.type !== TokenType.RParen) {
+            this.nextToken();
+            const expr = this.parseExpression(Precedence.LOWEST);
+            if (!expr) {
+                return null;
+            }
+
+            args.push(expr);
+
+            this.nextToken();
+            if (
+                this.curTok.type !== TokenType.RParen &&
+                this.curTok.type !== TokenType.Comma
+            ) {
+                this.errors.push(
+                    `Error while parsing call expression. Expected ',' or ')', got='${this.curTok.type}'`
+                );
+                return null;
+            }
+        }
+
+        return new CallExpression(curTok, left, args);
     }
 
     parseFunctionLiteral(): IExpression | null {

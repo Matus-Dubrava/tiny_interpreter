@@ -308,7 +308,7 @@ export class CallExpression implements IExpression {
     func: IExpression; // this can be either an Identifier or Function
     args: IExpression[];
 
-    constructor(token: Token, func: Identifier, args: IExpression[]) {
+    constructor(token: Token, func: IExpression, args: IExpression[]) {
         this.token = token;
         this.func = func;
         this.args = args;
