@@ -1,4 +1,4 @@
-import { BooleanObj, IObject, IntObj } from '../object';
+import { BooleanObj, IObject, IntObj, NullObj } from '../object';
 import {
     INode,
     IntLiteral,
@@ -10,6 +10,7 @@ import {
 
 const TRUE = new BooleanObj(true);
 const FALSE = new BooleanObj(false);
+const NULL = new NullObj();
 
 export function evaluate(node: INode): IObject | null {
     if (node instanceof Program) {
