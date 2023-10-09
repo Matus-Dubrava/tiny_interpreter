@@ -7,9 +7,85 @@ import {
     ExpressionStatement,
     Int,
     PrefixExpression,
+    InfixExpression,
     Identifier,
 } from '../../ast';
 import { Parser } from '../index';
+
+test('test parse infix expression', () => {
+    const tests = [
+        {
+            input: '5 + 5;',
+            expectedLeftValue: 5,
+            expectedOperator: '+',
+            expectedRightValue: 5,
+        },
+        {
+            input: '5 - 5;',
+            expectedLeftValue: 5,
+            expectedOperator: '-',
+            expectedRightValue: 5,
+        },
+        {
+            input: '5 * 5;',
+            expectedLeftValue: 5,
+            expectedOperator: '*',
+            expectedRightValue: 5,
+        },
+        {
+            input: '5 / 5;',
+            expectedLeftValue: 5,
+            expectedOperator: '/',
+            expectedRightValue: 5,
+        },
+        {
+            input: '5 > 5;',
+            expectedLeftValue: 5,
+            expectedOperator: '>',
+            expectedRightValue: 5,
+        },
+        {
+            input: '5 < 5;',
+            expectedLeftValue: 5,
+            expectedOperator: '<',
+            expectedRightValue: 5,
+        },
+        {
+            input: '5 == 5;',
+            expectedLeftValue: 5,
+            expectedOperator: '==',
+            expectedRightValue: 5,
+        },
+        {
+            input: '5 != 5;',
+            expectedLeftValue: 5,
+            expectedOperator: '!=',
+            expectedRightValue: 5,
+        },
+    ];
+
+    tests.forEach(
+        ({
+            input,
+            expectedLeftValue,
+            expectedOperator,
+            expectedRightValue,
+        }) => {
+            const lexer = new Lexer(input);
+            const parser = new Parser(lexer);
+            const program = parser.parseProgram();
+            checkParseErrors(parser);
+            expect(program.stmts.length).toEqual(1);
+
+            const expr = getExpression(program.stmts[0]);
+            expect(expr).toBeInstanceOf(InfixExpression);
+            const infixExpr = expr as InfixExpression;
+            expect(infixExpr.operator).toEqual(expectedOperator);
+            testIntExpr(infixExpr.left, expectedLeftValue);
+            testIntExpr(infixExpr.right, expectedRightValue);
+        }
+    );
+});
 
 test('test parse prefix expression', () => {
     const tests = [

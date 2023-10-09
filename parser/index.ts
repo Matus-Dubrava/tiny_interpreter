@@ -9,13 +9,16 @@ import {
     Int,
     ExpressionStatement,
     PrefixExpression,
+    InfixExpression,
 } from '../ast';
 
-type PrefixParseFn = (parser: Parser) => IExpression | null;
-type InfixParseFn = (parser: Parser, left: IExpression) => IExpression | null;
+type PrefixParseFn = () => IExpression | null;
+type InfixParseFn = (left: IExpression) => IExpression | null;
 
 enum Precedence {
     LOWEST,
+    LOGICAL_OR,
+    LOGICAL_AND,
     EQUALS,
     LESSGREATER,
     SUM,
@@ -23,6 +26,22 @@ enum Precedence {
     PREFIX,
     CALL,
 }
+
+const operatorPrecedence = {
+    [TokenType.Equal]: Precedence.EQUALS,
+    [TokenType.NotEqual]: Precedence.EQUALS,
+    [TokenType.LessThan]: Precedence.LESSGREATER,
+    [TokenType.LessThanOrEq]: Precedence.LESSGREATER,
+    [TokenType.GreaterThan]: Precedence.LESSGREATER,
+    [TokenType.GreaterThanOrEq]: Precedence.LESSGREATER,
+    [TokenType.Plus]: Precedence.SUM,
+    [TokenType.Minus]: Precedence.SUM,
+    [TokenType.Slash]: Precedence.PRODUCT,
+    [TokenType.Asterisk]: Precedence.PRODUCT,
+    [TokenType.Percent]: Precedence.PRODUCT,
+    [TokenType.And]: Precedence.LOGICAL_AND,
+    [TokenType.Or]: Precedence.LOGICAL_OR,
+} as const;
 
 export class Parser {
     lex: Lexer;
@@ -46,6 +65,59 @@ export class Parser {
         this.registerPrefixFn(
             TokenType.Bang,
             this.parsePrefixExpression.bind(this)
+        );
+
+        this.registerInfixFn(
+            TokenType.And,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.Or,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.Slash,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.Asterisk,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.Percent,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.Plus,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.Minus,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.Equal,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.NotEqual,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.LessThan,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.LessThanOrEq,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.GreaterThan,
+            this.parseInfixExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.GreaterThanOrEq,
+            this.parseInfixExpression.bind(this)
         );
     }
 
@@ -145,7 +217,25 @@ export class Parser {
             return null;
         }
 
-        const leftExpr = prefixFn(this);
+        let leftExpr = prefixFn();
+
+        while (
+            this.peekTok.type !== TokenType.Semicolon &&
+            precedence < this.getPeekPrecedence()
+        ) {
+            if (!leftExpr) {
+                return null;
+            }
+
+            const infixFn = this.infixFns[this.peekTok.type];
+            if (!infixFn) {
+                return leftExpr;
+            }
+
+            this.nextToken();
+
+            leftExpr = infixFn(leftExpr);
+        }
 
         return leftExpr;
     }
@@ -164,6 +254,19 @@ export class Parser {
         }
 
         return new PrefixExpression(curTok, curTok.literal, expr);
+    }
+
+    parseInfixExpression(left: IExpression): IExpression | null {
+        const curTok = this.curTok;
+        const precedence = this.getCurrentPrecedence();
+        this.nextToken();
+
+        const expr = this.parseExpression(precedence);
+        if (!expr) {
+            return null;
+        }
+
+        return new InfixExpression(curTok, left, curTok.literal, expr);
     }
 
     readUnilSemicolon(): void {
@@ -213,5 +316,21 @@ export class Parser {
         if (this.peekTok.type === TokenType.Semicolon) {
             this.nextToken();
         }
+    }
+
+    getCurrentPrecedence() {
+        const precedence = operatorPrecedence[this.curTok.type];
+        if (!precedence) {
+            return Precedence.LOWEST;
+        }
+        return precedence;
+    }
+
+    getPeekPrecedence() {
+        const precedence = operatorPrecedence[this.peekTok.type];
+        if (!precedence) {
+            return Precedence.LOWEST;
+        }
+        return precedence;
     }
 }

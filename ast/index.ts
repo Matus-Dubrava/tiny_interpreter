@@ -172,3 +172,32 @@ export class PrefixExpression implements IExpression {
         return `${this.operator}${this.expr.toString()}`;
     }
 }
+
+export class InfixExpression implements IExpression {
+    token: Token;
+    left: IExpression;
+    operator: string;
+    right: IExpression;
+
+    constructor(
+        token: Token,
+        left: IExpression,
+        operator: string,
+        right: IExpression
+    ) {
+        this.token = token;
+        this.left = left;
+        this.operator = operator;
+        this.right = right;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `(${this.left} ${this.operator} ${this.right})`;
+    }
+}
