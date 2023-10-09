@@ -323,6 +323,6 @@ export class CallExpression implements IExpression {
     toString(): string {
         return `${this.func.toString()}(${this.args
             .map((arg) => arg.toString())
-            .join(',')})`;
+            .join(', ')})`;
     }
 }
