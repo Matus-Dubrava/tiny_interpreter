@@ -1,4 +1,4 @@
-import { IObject, IntObj } from '../../object';
+import { BooleanObj, IObject, IntObj } from '../../object';
 import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
 import { evaluate } from '..';
@@ -17,16 +17,32 @@ test('test evaluate integer expression', () => {
     });
 });
 
+test('test evaluate boolean expression', () => {
+    const tests = [
+        { input: 'true', expected: true },
+        { input: 'false', expected: false },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+        const evaluated = testEval(input);
+        expect(evaluate).not.toBeNull();
+        testBooleanObject(evaluated!, expected);
+    });
+});
+
 function testEval(input: string): IObject | null {
     const lexer = new Lexer(input);
     const parser = new Parser(lexer);
     const program = parser.parseProgram();
-
     return evaluate(program);
+}
+
+function testBooleanObject(obj: IObject, expected: boolean) {
+    expect(obj).toBeInstanceOf(BooleanObj);
+    expect((obj as BooleanObj).value).toEqual(expected);
 }
 
 function testIntegerObject(obj: IObject, expected: number) {
     expect(obj).toBeInstanceOf(IntObj);
-    const intObj = obj as IntObj;
-    expect(intObj.value).toEqual(expected);
+    expect((obj as IntObj).value).toEqual(expected);
 }

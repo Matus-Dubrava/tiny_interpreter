@@ -6,7 +6,7 @@ export const ObjectType = {
 
 export interface IObject {
     getType(): string;
-    inspect(): string;
+    toString(): string;
 }
 
 export class IntObj implements IObject {
@@ -20,7 +20,7 @@ export class IntObj implements IObject {
         return ObjectType.INTEGER_OBJ;
     }
 
-    inspect(): string {
+    toString(): string {
         return `${this.value}`;
     }
 }

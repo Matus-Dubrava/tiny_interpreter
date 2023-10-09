@@ -1,10 +1,11 @@
-import { IObject, IntObj } from '../object';
+import { BooleanObj, IObject, IntObj } from '../object';
 import {
     INode,
     IntLiteral,
     Program,
     ExpressionStatement,
     IStatement,
+    BooleanLiteral,
 } from '../ast';
 
 export function evaluate(node: INode): IObject | null {
@@ -14,6 +15,8 @@ export function evaluate(node: INode): IObject | null {
         return evaluate(node.expr);
     } else if (node instanceof IntLiteral) {
         return new IntObj(node.value);
+    } else if (node instanceof BooleanLiteral) {
+        return new BooleanObj(node.value);
     }
 
     return null;

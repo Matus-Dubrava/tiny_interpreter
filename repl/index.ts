@@ -1,6 +1,7 @@
 import * as readline from 'readline';
 import { Lexer } from '../lexer';
 import { Parser } from '../parser';
+import { evaluate } from '../evaluator';
 
 export function repl() {
     const rl = readline.createInterface({
@@ -17,8 +18,10 @@ export function repl() {
             rl.close();
             return;
         }
-
-        console.log(program.toString());
+        const evaluated = evaluate(program);
+        if (evaluated) {
+            console.log(evaluated.toString());
+        }
 
         rl.close();
     });
