@@ -302,3 +302,27 @@ export class FunctionLiteral implements IExpression {
             .join(',')}) ${this.body.toString()}`;
     }
 }
+
+export class CallExpression implements IExpression {
+    token: Token;
+    func: IExpression; // this can be either an Identifier or Function
+    args: IExpression[];
+
+    constructor(token: Token, func: Identifier, args: IExpression[]) {
+        this.token = token;
+        this.func = func;
+        this.args = args;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `${this.func.toString()}(${this.args
+            .map((arg) => arg.toString())
+            .join(',')})`;
+    }
+}

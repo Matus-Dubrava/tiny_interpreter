@@ -12,6 +12,7 @@ import {
     BooleanLiteral,
     IfExpression,
     FunctionLiteral,
+    CallExpression,
 } from '../../ast';
 import { Parser } from '../index';
 
@@ -84,6 +85,26 @@ test('test operator precendece', () => {
         checkParseErrors(parser);
         expect(program.toString()).toEqual(expected);
     });
+});
+
+test('test parse call expression', () => {
+    const input = 'add(1, 2 * 3, 4 + 5);';
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+
+    expect(program.stmts.length).toEqual(1);
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(CallExpression);
+    const callExpr = expr as CallExpression;
+
+    testIdentifier(callExpr.func, 'add');
+    expect(callExpr.args.length).toEqual(3);
+    testIntExpr(callExpr.args[0], 1);
+    testInfixExpression(callExpr.args[1], 2, '*', 3);
+    testInfixExpression(callExpr.args[2], 4, '+', 5);
 });
 
 test('test parse function literal', () => {
