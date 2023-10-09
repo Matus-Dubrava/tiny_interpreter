@@ -45,6 +45,14 @@ test('test operator precendece', () => {
             input: '1 > 2 && 3 < 4 || 5 > 6 && 7 < 8',
             expected: '(((1 > 2) && (3 < 4)) || ((5 > 6) && (7 < 8)))',
         },
+        {
+            input: '3 > 5 == false',
+            expected: '((3 > 5) == false)',
+        },
+        {
+            input: '3 < 5 == true',
+            expected: '((3 < 5) == true)',
+        },
     ];
 
     tests.forEach(({ input, expected }) => {
@@ -106,33 +114,6 @@ test('test parse infix expression', () => {
             expectedOperator: '!=',
             expectedRightValue: 5,
         },
-    ];
-
-    tests.forEach(
-        ({
-            input,
-            expectedLeftValue,
-            expectedOperator,
-            expectedRightValue,
-        }) => {
-            const lexer = new Lexer(input);
-            const parser = new Parser(lexer);
-            const program = parser.parseProgram();
-            checkParseErrors(parser);
-            expect(program.stmts.length).toEqual(1);
-
-            const expr = getExpression(program.stmts[0]);
-            expect(expr).toBeInstanceOf(InfixExpression);
-            const infixExpr = expr as InfixExpression;
-            expect(infixExpr.operator).toEqual(expectedOperator);
-            testIntExpr(infixExpr.left, expectedLeftValue);
-            testIntExpr(infixExpr.right, expectedRightValue);
-        }
-    );
-});
-
-test('test parse boolean expression', () => {
-    const tests = [
         {
             input: 'true == true;',
             expectedLeftValue: true,
@@ -173,15 +154,10 @@ test('test parse boolean expression', () => {
             expect(program.stmts.length).toEqual(1);
 
             const expr = getExpression(program.stmts[0]);
-            expect(expr).toBeInstanceOf(InfixExpression);
-            const infixExpr = expr as InfixExpression;
-            expect(infixExpr.operator).toEqual(expectedOperator);
-            expect(infixExpr.left).toBeInstanceOf(BooleanLiteral);
-            expect((infixExpr.left as BooleanLiteral).value).toEqual(
-                expectedLeftValue
-            );
-            expect(infixExpr.right).toBeInstanceOf(BooleanLiteral);
-            expect((infixExpr.right as BooleanLiteral).value).toEqual(
+            testInfixExpression(
+                expr,
+                expectedLeftValue,
+                expectedOperator,
                 expectedRightValue
             );
         }
@@ -331,6 +307,11 @@ function testIdentifier(expr: IExpression, expectedName: string) {
     expect((expr as Identifier).name).toEqual(expectedName);
 }
 
+function testBooleanLiteral(expr: IExpression, expectedValue: boolean) {
+    expect(expr).toBeInstanceOf(BooleanLiteral);
+    expect((expr as BooleanLiteral).value).toEqual(expectedValue);
+}
+
 function getExpression(stmt: IStatement): IExpression {
     expect(stmt).toBeInstanceOf(ExpressionStatement);
     const expr = (stmt as ExpressionStatement).expr;
@@ -346,4 +327,33 @@ function checkParseErrors(parser: Parser) {
         console.log(parser.errors);
         throw new Error('Expected no parse error');
     }
+}
+
+function testLiteralExpression(expr: IExpression, value: any) {
+    switch (typeof value) {
+        case 'number':
+            testIntExpr(expr, value);
+            break;
+        case 'string':
+            testIdentifier(expr, value);
+            break;
+        case 'boolean':
+            testBooleanLiteral(expr, value);
+            break;
+        default:
+            throw new Error(`Type of expr not handled. Got=${expr}`);
+    }
+}
+
+function testInfixExpression(
+    expr: IExpression,
+    left: any,
+    operator: string,
+    right: any
+) {
+    expect(expr).toBeInstanceOf(InfixExpression);
+    const infixExpr = expr as InfixExpression;
+    testLiteralExpression(infixExpr.left, left);
+    expect(infixExpr.operator).toEqual(operator);
+    testLiteralExpression(infixExpr.right, right);
 }
