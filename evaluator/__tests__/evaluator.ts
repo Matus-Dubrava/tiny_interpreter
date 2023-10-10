@@ -2,6 +2,7 @@ import { BooleanObj, ErrorObj, IObject, IntObj, NullObj } from '../../object';
 import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
 import { evaluate } from '..';
+import { ProgramEnvironment } from '../../object/environment';
 
 test('test error handling', () => {
     const tests = [
@@ -32,12 +33,31 @@ test('test error handling', () => {
             `,
             expected: 'unknown operator: BOOLEAN + BOOLEAN',
         },
+        {
+            input: 'foobar',
+            expected: 'identifier not found: foobar',
+        },
     ];
 
     tests.forEach(({ input, expected }) => {
         const evaluated = testEval(input);
         expect(evaluated).not.toBeNull();
         testErrorObject(evaluated!, expected);
+    });
+});
+
+test('test evaluate let statement', () => {
+    const tests = [
+        { input: 'let a = 5; a;', expected: 5 },
+        { input: 'let a = 5 * 5; a;', expected: 25 },
+        { input: 'let a = 5; let b = a; b;', expected: 5 },
+        { input: 'let a = 5; let b = a; let c = a + b + 5; c;', expected: 15 },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+        const evaluated = testEval(input);
+        expect(evaluated).not.toBeNull();
+        testIntegerObject(evaluated!, expected);
     });
 });
 
@@ -196,7 +216,8 @@ function testEval(input: string): IObject | null {
     const lexer = new Lexer(input);
     const parser = new Parser(lexer);
     const program = parser.parseProgram();
-    return evaluate(program);
+    const env = new ProgramEnvironment();
+    return evaluate(program, env);
 }
 
 function testErrorObject(obj: IObject, expected: string): void {

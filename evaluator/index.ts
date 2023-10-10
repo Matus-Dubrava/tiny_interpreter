@@ -11,6 +11,7 @@ import {
     IntLiteral,
     Program,
     ExpressionStatement,
+    Let,
     IStatement,
     BooleanLiteral,
     PrefixExpression,
@@ -19,66 +20,99 @@ import {
     BlockStatement,
     IExpression,
     Return,
+    Identifier,
 } from '../ast';
+import { ProgramEnvironment } from '../object/environment';
 
 const TRUE = new BooleanObj(true);
 const FALSE = new BooleanObj(false);
 const NULL = new NullObj();
 
-export function evaluate(node: INode): IObject {
+export function evaluate(node: INode, env: ProgramEnvironment): IObject {
     if (node instanceof Program) {
-        return evaluateProgram(node.stmts);
+        return evaluateProgram(node.stmts, env);
     } else if (node instanceof BlockStatement) {
-        return evaluateStatements(node.stmts);
+        return evaluateStatements(node.stmts, env);
     } else if (node instanceof ExpressionStatement) {
-        return evaluate(node.expr);
+        return evaluate(node.expr, env);
     } else if (node instanceof IntLiteral) {
         return new IntObj(node.value);
     } else if (node instanceof BooleanLiteral) {
         return nativeBooleanToBooleanObject(node.value);
     } else if (node instanceof PrefixExpression) {
-        return evaluatePrefixExpression(node);
+        return evaluatePrefixExpression(node, env);
     } else if (node instanceof InfixExpression) {
-        return evaluateInfixExpression(node);
+        return evaluateInfixExpression(node, env);
     } else if (node instanceof IfExpression) {
-        return evaluateIfExpresion(node);
+        return evaluateIfExpresion(node, env);
     } else if (node instanceof Return) {
-        return evaluateReturnStatement(node);
+        return evaluateReturnStatement(node, env);
+    } else if (node instanceof Let) {
+        return evaluateLetStatement(node, env);
+    } else if (node instanceof Identifier) {
+        return evaluateIdentifier(node, env);
     }
 
     return getUnrecognizedStatementError(node);
 }
 
-function evaluateReturnStatement(stmt: Return): IObject {
-    const obj = evaluate(stmt.expr);
+function evaluateIdentifier(
+    ident: Identifier,
+    env: ProgramEnvironment
+): IObject {
+    const value = env.get(ident.name);
+    return value ? value : new ErrorObj(`identifier not found: ${ident.name}`);
+}
+
+function evaluateLetStatement(stmt: Let, env: ProgramEnvironment): IObject {
+    const value = evaluate(stmt.expr, env);
+    if (value instanceof ErrorObj) {
+        return value;
+    }
+
+    env.set(stmt.ident.name, value);
+    return NULL;
+}
+
+function evaluateReturnStatement(
+    stmt: Return,
+    env: ProgramEnvironment
+): IObject {
+    const obj = evaluate(stmt.expr, env);
     if (obj instanceof ErrorObj) {
         return obj;
     }
     return new ReturnObj(obj);
 }
 
-function evaluateIfExpresion(expr: IfExpression): IObject {
-    const conditionObj = evaluate(expr.condition);
+function evaluateIfExpresion(
+    expr: IfExpression,
+    env: ProgramEnvironment
+): IObject {
+    const conditionObj = evaluate(expr.condition, env);
     if (conditionObj instanceof ErrorObj) {
         return conditionObj;
     }
 
     if (isTruthy(conditionObj)) {
-        return evaluateStatements(expr.consequence.stmts);
+        return evaluateStatements(expr.consequence.stmts, env);
     } else if (expr.alternative) {
-        return evaluateStatements(expr.alternative.stmts);
+        return evaluateStatements(expr.alternative.stmts, env);
     }
 
     return NULL;
 }
 
-function evaluateInfixExpression(expr: InfixExpression): IObject {
-    const left = evaluate(expr.left);
+function evaluateInfixExpression(
+    expr: InfixExpression,
+    env: ProgramEnvironment
+): IObject {
+    const left = evaluate(expr.left, env);
     if (left instanceof ErrorObj) {
         return left;
     }
 
-    const right = evaluate(expr.right);
+    const right = evaluate(expr.right, env);
     if (right instanceof ErrorObj) {
         return right;
     }
@@ -293,8 +327,11 @@ function evaluateInfixReminder(
     }
 }
 
-function evaluatePrefixExpression(expr: PrefixExpression): IObject {
-    const right = evaluate(expr.expr);
+function evaluatePrefixExpression(
+    expr: PrefixExpression,
+    env: ProgramEnvironment
+): IObject {
+    const right = evaluate(expr.expr, env);
     if (right instanceof ErrorObj) {
         return right;
     }
@@ -321,11 +358,14 @@ function evaluatePrefixExpression(expr: PrefixExpression): IObject {
     }
 }
 
-function evaluateProgram(stmts: IStatement[]): IObject {
+function evaluateProgram(
+    stmts: IStatement[],
+    env: ProgramEnvironment
+): IObject {
     let result: IObject = NULL;
 
     for (const stmt of stmts) {
-        result = evaluate(stmt);
+        result = evaluate(stmt, env);
         if (result instanceof ReturnObj) {
             return result.value;
         }
@@ -337,11 +377,14 @@ function evaluateProgram(stmts: IStatement[]): IObject {
     return result;
 }
 
-function evaluateStatements(stmts: IStatement[]): IObject {
+function evaluateStatements(
+    stmts: IStatement[],
+    env: ProgramEnvironment
+): IObject {
     let result: IObject = NULL;
 
     for (const stmt of stmts) {
-        result = evaluate(stmt);
+        result = evaluate(stmt, env);
         if (result instanceof ReturnObj || result instanceof ErrorObj) {
             return result;
         }
