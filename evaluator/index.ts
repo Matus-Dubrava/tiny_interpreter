@@ -33,29 +33,31 @@ export function evaluate(node: INode): IObject | null {
     return null;
 }
 
-function evaluatePrefixExpression(expr: IObject, operator: string): IObject {
-    if (expr instanceof BooleanObj) {
+function evaluatePrefixExpression(right: IObject, operator: string): IObject {
+    if (right instanceof BooleanObj) {
         if (operator === '!') {
-            return expr.value ? FALSE : TRUE;
+            return right.value ? FALSE : TRUE;
         } else {
             return new ErrorObj(
-                `unknown operator '${operator}' in expression '${expr.toString()}'`
+                `unknown operator '${operator}' in expression '${right.toString()}'`
             );
         }
-    } else if (expr instanceof IntObj) {
+    } else if (right instanceof IntObj) {
         switch (operator) {
             case '-':
-                return new IntObj(-expr.value);
+                return right.value === 0
+                    ? new IntObj(0)
+                    : new IntObj(-right.value);
             case '!': {
-                return expr.value === 0 ? TRUE : FALSE;
+                return right.value === 0 ? TRUE : FALSE;
             }
             default:
                 return new ErrorObj(
-                    `unkown operator '${operator}' in expression '${expr.toString()}'`
+                    `unkown operator '${operator}' in expression '${right.toString()}'`
                 );
         }
     } else {
-        return new ErrorObj(`invalid expression '${expr.toString()}'`);
+        return new ErrorObj(`invalid expression '${right.toString()}'`);
     }
 }
 

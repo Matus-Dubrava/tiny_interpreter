@@ -25,6 +25,8 @@ test('test evaluate integer expression', () => {
         { input: '5', expected: 5 },
         { input: '9999', expected: 9999 },
         { input: '0', expected: 0 },
+        { input: '-1', expected: -1 },
+        { input: '-0', expected: 0 },
     ];
 
     tests.forEach(({ input, expected }) => {
