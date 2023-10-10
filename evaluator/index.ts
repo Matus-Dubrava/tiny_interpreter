@@ -7,7 +7,6 @@ import {
     IStatement,
     BooleanLiteral,
     PrefixExpression,
-    IExpression,
     InfixExpression,
 } from '../ast';
 
@@ -51,91 +50,195 @@ function evaluateInfixExpression(
 ): IObject {
     switch (operator) {
         case '+':
-            return evaluateInfixPlus(left, right);
+            return evaluateInfixPlus(left, right, operator);
         case '-':
-            return evaluateInfixMinus(left, right);
+            return evaluateInfixMinus(left, right, operator);
         case '*':
-            return evaluateInfixAsterisk(left, right);
+            return evaluateInfixAsterisk(left, right, operator);
         case '/':
-            return evaluateInfixSlash(left, right);
+            return evaluateInfixSlash(left, right, operator);
         case '%':
-            return evaluateInfixReminder(left, right);
+            return evaluateInfixReminder(left, right, operator);
         case '||':
-            return evaluateInfixOr(left, right);
+            return evaluateInfixOr(left, right, operator);
         case '&&':
-            return evaluateInfixAnd(left, right);
+            return evaluateInfixAnd(left, right, operator);
+        case '>':
+            return evaluateInfixGreaterThan(left, right, operator);
+        case '>=':
+            return evaluateInfixGreaterThanOrEqual(left, right, operator);
+        case '<':
+            return evaluateInfixLessThan(left, right, operator);
+        case '<=':
+            return evaluateInfixLessThanOrEqual(left, right, operator);
+        case '==':
+            return evaluateInfixEqual(left, right, operator);
+        case '!=':
+            return evaluateInfixNotEqual(left, right, operator);
         default:
             return new ErrorObj(`unknown infix operator '${operator}'`);
     }
 }
 
-function evaluateInfixOr(left: IObject, right: IObject): IObject {
-    if (left instanceof BooleanObj && right instanceof BooleanObj) {
-        return new BooleanObj(left.value || right.value);
+function evaluateInfixNotEqual(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
+    if (
+        (left instanceof IntObj && right instanceof IntObj) ||
+        (left instanceof BooleanObj && right instanceof BooleanObj)
+    ) {
+        return nativeBooleanToBooleanObject(left.value != right.value);
     } else {
-        return new ErrorObj(
-            `cannot apply '||' on '${left.getType()}' and '${right.getType()}'`
-        );
+        return getIncompatibleInfixTypesError(left, right, operator);
     }
 }
 
-function evaluateInfixAnd(left: IObject, right: IObject): IObject {
-    if (left instanceof BooleanObj && right instanceof BooleanObj) {
-        return new BooleanObj(left.value && right.value);
+function evaluateInfixEqual(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
+    if (
+        (left instanceof IntObj && right instanceof IntObj) ||
+        (left instanceof BooleanObj && right instanceof BooleanObj)
+    ) {
+        return nativeBooleanToBooleanObject(left.value == right.value);
     } else {
-        return new ErrorObj(
-            `cannot apply '&&' on '${left.getType()}' and '${right.getType()}'`
-        );
+        return getIncompatibleInfixTypesError(left, right, operator);
     }
 }
 
-function evaluateInfixPlus(left: IObject, right: IObject): IObject {
+function evaluateInfixLessThanOrEqual(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
+    if (left instanceof IntObj && right instanceof IntObj) {
+        return nativeBooleanToBooleanObject(left.value <= right.value);
+    } else {
+        return getIncompatibleInfixTypesError(left, right, operator);
+    }
+}
+
+function evaluateInfixLessThan(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
+    if (left instanceof IntObj && right instanceof IntObj) {
+        return nativeBooleanToBooleanObject(left.value < right.value);
+    } else {
+        return getIncompatibleInfixTypesError(left, right, operator);
+    }
+}
+
+function evaluateInfixGreaterThanOrEqual(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
+    if (left instanceof IntObj && right instanceof IntObj) {
+        return nativeBooleanToBooleanObject(left.value >= right.value);
+    } else {
+        return getIncompatibleInfixTypesError(left, right, operator);
+    }
+}
+
+function evaluateInfixGreaterThan(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
+    if (left instanceof IntObj && right instanceof IntObj) {
+        return nativeBooleanToBooleanObject(left.value > right.value);
+    } else {
+        return getIncompatibleInfixTypesError(left, right, operator);
+    }
+}
+
+function evaluateInfixOr(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
+    if (left instanceof BooleanObj && right instanceof BooleanObj) {
+        return nativeBooleanToBooleanObject(left.value || right.value);
+    } else {
+        return getIncompatibleInfixTypesError(left, right, operator);
+    }
+}
+
+function evaluateInfixAnd(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
+    if (left instanceof BooleanObj && right instanceof BooleanObj) {
+        return nativeBooleanToBooleanObject(left.value && right.value);
+    } else {
+        return getIncompatibleInfixTypesError(left, right, operator);
+    }
+}
+
+function evaluateInfixPlus(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
     if (left instanceof IntObj && right instanceof IntObj) {
         return new IntObj(left.value + right.value);
     } else {
-        return new ErrorObj(
-            `cannot apply '+' on '${left.getType()}' and '${right.getType()}'`
-        );
+        return getIncompatibleInfixTypesError(left, right, operator);
     }
 }
 
-function evaluateInfixMinus(left: IObject, right: IObject): IObject {
+function evaluateInfixMinus(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
     if (left instanceof IntObj && right instanceof IntObj) {
         return new IntObj(left.value - right.value);
     } else {
-        return new ErrorObj(
-            `cannot apply '-' on '${left.getType()}' and '${right.getType()}'`
-        );
+        return getIncompatibleInfixTypesError(left, right, operator);
     }
 }
 
-function evaluateInfixAsterisk(left: IObject, right: IObject): IObject {
+function evaluateInfixAsterisk(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
     if (left instanceof IntObj && right instanceof IntObj) {
         return new IntObj(left.value * right.value);
     } else {
-        return new ErrorObj(
-            `cannot apply '*' on '${left.getType()}' and '${right.getType()}'`
-        );
+        return getIncompatibleInfixTypesError(left, right, operator);
     }
 }
 
-function evaluateInfixSlash(left: IObject, right: IObject): IObject {
+function evaluateInfixSlash(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
     if (left instanceof IntObj && right instanceof IntObj) {
         return new IntObj(left.value / right.value);
     } else {
-        return new ErrorObj(
-            `cannot apply '/' on '${left.getType()}' and '${right.getType()}'`
-        );
+        return getIncompatibleInfixTypesError(left, right, operator);
     }
 }
 
-function evaluateInfixReminder(left: IObject, right: IObject): IObject {
+function evaluateInfixReminder(
+    left: IObject,
+    right: IObject,
+    operator: string
+): IObject {
     if (left instanceof IntObj && right instanceof IntObj) {
         return new IntObj(left.value % right.value);
     } else {
-        return new ErrorObj(
-            `cannot apply '%' on '${left.getType()}' and '${right.getType()}'`
-        );
+        return getIncompatibleInfixTypesError(left, right, operator);
     }
 }
 
@@ -180,4 +283,14 @@ function nativeBooleanToBooleanObject(input: boolean): BooleanObj {
         return TRUE;
     }
     return FALSE;
+}
+
+function getIncompatibleInfixTypesError(
+    left: IObject,
+    right: IObject,
+    operator: string
+): ErrorObj {
+    return new ErrorObj(
+        `cannot apply '${operator}' on '${left.getType()}' and '${right.getType()}'`
+    );
 }

@@ -52,6 +52,8 @@ test('test evaluate integer expression', () => {
 
 test('test evaluate infix boolean expression', () => {
     const tests = [
+        { input: 'true', expected: true },
+        { input: 'false', expected: false },
         { input: 'true && true', expected: true },
         { input: 'true && false', expected: false },
         { input: 'true && false', expected: false },
@@ -60,24 +62,29 @@ test('test evaluate infix boolean expression', () => {
         { input: 'true || false', expected: true },
         { input: 'true || false', expected: true },
         { input: 'false || false', expected: false },
+        { input: 'true', expected: true },
+        { input: 'false', expected: false },
+        { input: '1 < 2', expected: true },
+        { input: '1 > 2', expected: false },
+        { input: '1 < 1', expected: false },
+        { input: '1 > 1', expected: false },
+        { input: '1 >= 1', expected: true },
+        { input: '1 >= 2', expected: false },
+        { input: '1 <= 1', expected: true },
+        { input: '1 <= 0', expected: false },
+        { input: '1 == 1', expected: true },
+        { input: '1 != 1', expected: false },
+        { input: '1 == 2', expected: false },
+        { input: '1 != 2', expected: true },
+        { input: 'true == true', expected: true },
+        { input: 'true != true', expected: false },
+        { input: 'true != false', expected: true },
+        { input: 'true == false', expected: false },
     ];
 
     tests.forEach(({ input, expected }) => {
         const evaluated = testEval(input);
         expect(evaluated).not.toBeNull();
-        testBooleanObject(evaluated!, expected);
-    });
-});
-
-test('test evaluate boolean expression', () => {
-    const tests = [
-        { input: 'true', expected: true },
-        { input: 'false', expected: false },
-    ];
-
-    tests.forEach(({ input, expected }) => {
-        const evaluated = testEval(input);
-        expect(evaluate).not.toBeNull();
         testBooleanObject(evaluated!, expected);
     });
 });
