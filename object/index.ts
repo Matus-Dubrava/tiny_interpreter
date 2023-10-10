@@ -1,9 +1,13 @@
+import { BlockStatement, Identifier } from '../ast';
+import { ProgramEnvironment } from './environment';
+
 export const ObjectType = {
     INTEGER_OBJ: 'INTEGER',
     BOOLEAN_OBJ: 'BOOLEAN',
     NULL_OBJ: 'NULL',
     ERROR_OBJ: 'ERROR',
     RETUNR_OBJ: 'RETURN',
+    FUNCTION_OBJ: 'FUNCTION',
 } as const;
 
 type ObjectTypeItem = (typeof ObjectType)[keyof typeof ObjectType];
@@ -86,5 +90,31 @@ export class ReturnObj implements IObject {
 
     toString(): string {
         return this.value.toString();
+    }
+}
+
+export class FunctionObject implements IObject {
+    params: Identifier[];
+    body: BlockStatement;
+    env: ProgramEnvironment;
+
+    constructor(
+        params: Identifier[],
+        body: BlockStatement,
+        env: ProgramEnvironment
+    ) {
+        this.params = params;
+        this.body = body;
+        this.env = env;
+    }
+
+    getType(): ObjectTypeItem {
+        return ObjectType.FUNCTION_OBJ;
+    }
+
+    toString(): string {
+        return `fn(${this.params
+            .map((param) => param.toString())
+            .join(', ')}) {\n${this.body.toString()}}\n`;
     }
 }

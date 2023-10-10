@@ -1,4 +1,11 @@
-import { BooleanObj, ErrorObj, IObject, IntObj, NullObj } from '../../object';
+import {
+    BooleanObj,
+    ErrorObj,
+    FunctionObject,
+    IObject,
+    IntObj,
+    NullObj,
+} from '../../object';
 import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
 import { evaluate } from '..';
@@ -44,6 +51,18 @@ test('test error handling', () => {
         expect(evaluated).not.toBeNull();
         testErrorObject(evaluated!, expected);
     });
+});
+
+test('test evaluate function expression', () => {
+    const input = 'fn(x) { x + 2; };';
+
+    const evaluated = testEval(input);
+    expect(evaluated).not.toBeNull();
+    expect(evaluated).toBeInstanceOf(FunctionObject);
+    const fn = evaluated as FunctionObject;
+    expect(fn.params.length).toEqual(1);
+    expect(fn.params[0].toString()).toEqual('x');
+    expect(fn.body.toString()).toEqual('(x + 2)');
 });
 
 test('test evaluate let statement', () => {

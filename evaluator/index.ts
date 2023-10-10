@@ -1,6 +1,7 @@
 import {
     BooleanObj,
     ErrorObj,
+    FunctionObject,
     IObject,
     IntObj,
     NullObj,
@@ -21,6 +22,7 @@ import {
     IExpression,
     Return,
     Identifier,
+    FunctionLiteral,
 } from '../ast';
 import { ProgramEnvironment } from '../object/environment';
 
@@ -51,9 +53,18 @@ export function evaluate(node: INode, env: ProgramEnvironment): IObject {
         return evaluateLetStatement(node, env);
     } else if (node instanceof Identifier) {
         return evaluateIdentifier(node, env);
+    } else if (node instanceof FunctionLiteral) {
+        return evaluateFunction(node, env);
     }
 
     return getUnrecognizedStatementError(node);
+}
+
+function evaluateFunction(
+    fn: FunctionLiteral,
+    env: ProgramEnvironment
+): IObject {
+    return new FunctionObject(fn.parameters, fn.body, env);
 }
 
 function evaluateIdentifier(
