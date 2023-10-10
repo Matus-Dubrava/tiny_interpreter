@@ -80,6 +80,10 @@ test('test evaluate infix boolean expression', () => {
         { input: 'true != true', expected: false },
         { input: 'true != false', expected: true },
         { input: 'true == false', expected: false },
+        { input: '(1 < 2) == true', expected: true },
+        { input: '(1 < 2) == false', expected: false },
+        { input: '(1 > 2) == true', expected: false },
+        { input: '(1 > 2) == false', expected: true },
     ];
 
     tests.forEach(({ input, expected }) => {
