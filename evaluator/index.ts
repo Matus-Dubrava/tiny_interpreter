@@ -92,9 +92,7 @@ function evaluateInfixExpression(expr: InfixExpression): IObject {
             case '!=':
                 return evaluateInfixNotEqual(left, right, expr.operator);
             default:
-                return new ErrorObj(
-                    `unknown infix operator '${expr.operator}'`
-                );
+                return getUnknownOperatorError(expr.operator);
         }
     }
 }
@@ -285,7 +283,7 @@ function evaluatePrefixExpression(expr: PrefixExpression): IObject {
                 return getIncompatibleOperatorError(right, expr.operator);
             }
         default:
-            return getIncompatibleOperatorError(right, expr.operator);
+            return getUnknownOperatorError(expr.operator);
     }
 }
 
@@ -318,6 +316,10 @@ function getIncompatibleOperatorError(
 
 function getExpressionEvaluationFailedError(expr: IExpression): ErrorObj {
     return new ErrorObj(`failed to evaluate expression '${expr.toString()}'`);
+}
+
+function getUnknownOperatorError(operator: string): ErrorObj {
+    return new ErrorObj(`unknown operator '${operator}'`);
 }
 
 function isTruthy(obj: IObject): boolean {
