@@ -3,6 +3,7 @@ export const ObjectType = {
     BOOLEAN_OBJ: 'BOOLEAN',
     NULL_OBJ: 'NULL',
     ERROR_OBJ: 'ERROR',
+    RETUNR_OBJ: 'RETURN',
 } as const;
 
 type ObjectTypeItem = (typeof ObjectType)[keyof typeof ObjectType];
@@ -69,5 +70,21 @@ export class ErrorObj implements IObject {
 
     toString(): string {
         return this.value;
+    }
+}
+
+export class ReturnObj implements IObject {
+    value: IObject;
+
+    constructor(value: IObject) {
+        this.value = value;
+    }
+
+    getType(): ObjectTypeItem {
+        return ObjectType.RETUNR_OBJ;
+    }
+
+    toString(): string {
+        return this.value.toString();
     }
 }

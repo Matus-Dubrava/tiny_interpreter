@@ -3,6 +3,45 @@ import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
 import { evaluate } from '..';
 
+test('test evaluate return statement', () => {
+    const tests = [
+        { input: 'return 10;', expected: 10 },
+        { input: 'return 10; 9;', expected: 10 },
+        { input: 'return 2 * 5; 9;', expected: 10 },
+        { input: '9; return 2 * 5; 9;', expected: 10 },
+        {
+            input: `
+                if (10 > 1) {
+                    if (10 > 1) {
+                        return 10;
+                    }
+                    129
+                    return 1;
+                }`,
+            expected: 10,
+        },
+        {
+            input: `
+                if (10 > 1) {
+                    if (10 > 1) {
+                        if (10 > 1) {
+                            return 10;
+                        }
+                    }
+                    129
+                    return 1;
+                }`,
+            expected: 10,
+        },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+        const evaluated = testEval(input);
+        expect(evaluated).not.toBeNull();
+        testIntegerObject(evaluated!, expected);
+    });
+});
+
 test('test evaluate prefix expression', () => {
     const tests = [
         { input: '!true', expected: false },

@@ -1,4 +1,11 @@
-import { BooleanObj, ErrorObj, IObject, IntObj, NullObj } from '../object';
+import {
+    BooleanObj,
+    ErrorObj,
+    IObject,
+    IntObj,
+    NullObj,
+    ReturnObj,
+} from '../object';
 import {
     INode,
     IntLiteral,
@@ -11,6 +18,7 @@ import {
     IfExpression,
     BlockStatement,
     IExpression,
+    Return,
 } from '../ast';
 
 const TRUE = new BooleanObj(true);
@@ -19,6 +27,8 @@ const NULL = new NullObj();
 
 export function evaluate(node: INode): IObject {
     if (node instanceof Program) {
+        return evaluateProgram(node.stmts);
+    } else if (node instanceof BlockStatement) {
         return evaluateStatements(node.stmts);
     } else if (node instanceof ExpressionStatement) {
         return evaluate(node.expr);
@@ -32,9 +42,19 @@ export function evaluate(node: INode): IObject {
         return evaluateInfixExpression(node);
     } else if (node instanceof IfExpression) {
         return evaluateIfExpresion(node);
+    } else if (node instanceof Return) {
+        return evaluateReturnStatement(node);
     }
 
-    return NULL;
+    return getUnrecognizedStatementError(node);
+}
+
+function evaluateReturnStatement(stmt: Return): IObject {
+    const expr = evaluate(stmt.expr);
+    if (!expr) {
+        return getExpressionEvaluationFailedError(expr);
+    }
+    return new ReturnObj(expr);
 }
 
 function evaluateIfExpresion(expr: IfExpression): IObject {
@@ -287,11 +307,29 @@ function evaluatePrefixExpression(expr: PrefixExpression): IObject {
     }
 }
 
+function evaluateProgram(stmts: IStatement[]): IObject {
+    let result: IObject = NULL;
+
+    for (const stmt of stmts) {
+        result = evaluate(stmt);
+        if (result instanceof ReturnObj) {
+            return result.value;
+        }
+    }
+
+    return result;
+}
+
 function evaluateStatements(stmts: IStatement[]): IObject {
     let result: IObject = NULL;
-    stmts.forEach((stmt) => {
+
+    for (const stmt of stmts) {
         result = evaluate(stmt);
-    });
+        if (result instanceof ReturnObj) {
+            return result;
+        }
+    }
+
     return result;
 }
 
@@ -312,6 +350,10 @@ function getIncompatibleOperatorError(
         : `cannot apply '${operator}' on '${left.getType()}'`;
 
     return new ErrorObj(msg);
+}
+
+function getUnrecognizedStatementError(node: INode): ErrorObj {
+    return new ErrorObj(`unrecognized statement error ${node.toString()}`);
 }
 
 function getExpressionEvaluationFailedError(expr: IExpression): ErrorObj {
