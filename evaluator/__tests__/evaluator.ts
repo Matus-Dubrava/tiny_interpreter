@@ -3,6 +3,23 @@ import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
 import { evaluate } from '..';
 
+test('test evaluate prefix expression', () => {
+    const tests = [
+        { input: '!true', expected: false },
+        { input: '!false', expected: true },
+        { input: '!5', expected: false },
+        { input: '!!true', expected: true },
+        { input: '!!false', expected: false },
+        { input: '!!5', expected: true },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+        const evaluated = testEval(input);
+        expect(evaluated).not.toBeNull();
+        testBooleanObject(evaluated!, expected);
+    });
+});
+
 test('test evaluate integer expression', () => {
     const tests = [
         { input: '5', expected: 5 },

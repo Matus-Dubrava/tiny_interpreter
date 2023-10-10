@@ -1,4 +1,4 @@
-import { BooleanObj, IObject, IntObj, NullObj } from '../object';
+import { BooleanObj, ErrorObj, IObject, IntObj, NullObj } from '../object';
 import {
     INode,
     IntLiteral,
@@ -6,6 +6,8 @@ import {
     ExpressionStatement,
     IStatement,
     BooleanLiteral,
+    PrefixExpression,
+    IExpression,
 } from '../ast';
 
 const TRUE = new BooleanObj(true);
@@ -21,9 +23,40 @@ export function evaluate(node: INode): IObject | null {
         return new IntObj(node.value);
     } else if (node instanceof BooleanLiteral) {
         return nativeBooleanToBooleanObject(node.value);
+    } else if (node instanceof PrefixExpression) {
+        const right = evaluate(node.expr);
+        if (right) {
+            return evaluatePrefixExpression(right, node.operator);
+        }
     }
 
     return null;
+}
+
+function evaluatePrefixExpression(expr: IObject, operator: string): IObject {
+    if (expr instanceof BooleanObj) {
+        if (operator === '!') {
+            return expr.value ? FALSE : TRUE;
+        } else {
+            return new ErrorObj(
+                `unknown operator '${operator}' in expression '${expr.toString()}'`
+            );
+        }
+    } else if (expr instanceof IntObj) {
+        switch (operator) {
+            case '-':
+                return new IntObj(-expr.value);
+            case '!': {
+                return expr.value === 0 ? TRUE : FALSE;
+            }
+            default:
+                return new ErrorObj(
+                    `unkown operator '${operator}' in expression '${expr.toString()}'`
+                );
+        }
+    } else {
+        return new ErrorObj(`invalid expression '${expr.toString()}'`);
+    }
 }
 
 function evaluateStatements(stmts: IStatement[]): IObject | null {
