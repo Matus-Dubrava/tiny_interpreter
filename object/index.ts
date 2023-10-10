@@ -69,7 +69,7 @@ export class ErrorObj implements IObject {
     }
 
     toString(): string {
-        return this.value;
+        return `ERROR: ${this.value}`;
     }
 }
 

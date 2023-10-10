@@ -50,20 +50,20 @@ export function evaluate(node: INode): IObject {
 }
 
 function evaluateReturnStatement(stmt: Return): IObject {
-    const expr = evaluate(stmt.expr);
-    if (!expr) {
-        return getExpressionEvaluationFailedError(expr);
+    const obj = evaluate(stmt.expr);
+    if (obj instanceof ErrorObj) {
+        return obj;
     }
-    return new ReturnObj(expr);
+    return new ReturnObj(obj);
 }
 
 function evaluateIfExpresion(expr: IfExpression): IObject {
-    const evaluatedCondition = evaluate(expr.condition);
-    if (!evaluatedCondition) {
-        return getExpressionEvaluationFailedError(expr.condition);
+    const conditionObj = evaluate(expr.condition);
+    if (conditionObj instanceof ErrorObj) {
+        return conditionObj;
     }
 
-    if (isTruthy(evaluatedCondition)) {
+    if (isTruthy(conditionObj)) {
         return evaluateStatements(expr.consequence.stmts);
     } else if (expr.alternative) {
         return evaluateStatements(expr.alternative.stmts);
@@ -74,11 +74,25 @@ function evaluateIfExpresion(expr: IfExpression): IObject {
 
 function evaluateInfixExpression(expr: InfixExpression): IObject {
     const left = evaluate(expr.left);
+    if (left instanceof ErrorObj) {
+        return left;
+    }
+
     const right = evaluate(expr.right);
-    if (!left) {
-        return getExpressionEvaluationFailedError(expr.left);
-    } else if (!right) {
-        return getExpressionEvaluationFailedError(expr.right);
+    if (right instanceof ErrorObj) {
+        return right;
+    }
+
+    // Here we are checking whether the types are compatible.
+    // Right now there are only 2 types - bool & int - which
+    // cannot be mixed.
+    if (
+        !(
+            (left instanceof IntObj && right instanceof IntObj) ||
+            (left instanceof BooleanObj && right instanceof BooleanObj)
+        )
+    ) {
+        return getIncompatibleTypesError(left, expr.operator, right);
     } else {
         switch (expr.operator) {
             case '+':
@@ -112,7 +126,7 @@ function evaluateInfixExpression(expr: InfixExpression): IObject {
             case '!=':
                 return evaluateInfixNotEqual(left, right, expr.operator);
             default:
-                return getUnknownOperatorError(expr.operator);
+                return getUnknownInfixOperatorError(left, expr.operator, right);
         }
     }
 }
@@ -128,7 +142,7 @@ function evaluateInfixNotEqual(
     ) {
         return nativeBooleanToBooleanObject(left.value != right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -143,7 +157,7 @@ function evaluateInfixEqual(
     ) {
         return nativeBooleanToBooleanObject(left.value == right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -155,7 +169,7 @@ function evaluateInfixLessThanOrEqual(
     if (left instanceof IntObj && right instanceof IntObj) {
         return nativeBooleanToBooleanObject(left.value <= right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -167,7 +181,7 @@ function evaluateInfixLessThan(
     if (left instanceof IntObj && right instanceof IntObj) {
         return nativeBooleanToBooleanObject(left.value < right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -179,7 +193,7 @@ function evaluateInfixGreaterThanOrEqual(
     if (left instanceof IntObj && right instanceof IntObj) {
         return nativeBooleanToBooleanObject(left.value >= right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -191,7 +205,7 @@ function evaluateInfixGreaterThan(
     if (left instanceof IntObj && right instanceof IntObj) {
         return nativeBooleanToBooleanObject(left.value > right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -203,7 +217,7 @@ function evaluateInfixOr(
     if (left instanceof BooleanObj && right instanceof BooleanObj) {
         return nativeBooleanToBooleanObject(left.value || right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -215,7 +229,7 @@ function evaluateInfixAnd(
     if (left instanceof BooleanObj && right instanceof BooleanObj) {
         return nativeBooleanToBooleanObject(left.value && right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -227,7 +241,7 @@ function evaluateInfixPlus(
     if (left instanceof IntObj && right instanceof IntObj) {
         return new IntObj(left.value + right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -239,7 +253,7 @@ function evaluateInfixMinus(
     if (left instanceof IntObj && right instanceof IntObj) {
         return new IntObj(left.value - right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -251,7 +265,7 @@ function evaluateInfixAsterisk(
     if (left instanceof IntObj && right instanceof IntObj) {
         return new IntObj(left.value * right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -263,7 +277,7 @@ function evaluateInfixSlash(
     if (left instanceof IntObj && right instanceof IntObj) {
         return new IntObj(left.value / right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
@@ -275,14 +289,14 @@ function evaluateInfixReminder(
     if (left instanceof IntObj && right instanceof IntObj) {
         return new IntObj(left.value % right.value);
     } else {
-        return getIncompatibleOperatorError(left, operator, right);
+        return getUnknownInfixOperatorError(left, operator, right);
     }
 }
 
 function evaluatePrefixExpression(expr: PrefixExpression): IObject {
     const right = evaluate(expr.expr);
-    if (!right) {
-        return getExpressionEvaluationFailedError(expr.expr);
+    if (right instanceof ErrorObj) {
+        return right;
     }
 
     switch (expr.operator) {
@@ -292,7 +306,7 @@ function evaluatePrefixExpression(expr: PrefixExpression): IObject {
             } else if (right instanceof IntObj) {
                 return right.value === 0 ? TRUE : FALSE;
             } else {
-                return getIncompatibleOperatorError(right, expr.operator);
+                return getUnknownPrefixOperatorError(expr.operator, right);
             }
         case '-':
             if (right instanceof IntObj) {
@@ -300,10 +314,10 @@ function evaluatePrefixExpression(expr: PrefixExpression): IObject {
                     ? new IntObj(0)
                     : new IntObj(-right.value);
             } else {
-                return getIncompatibleOperatorError(right, expr.operator);
+                return getUnknownPrefixOperatorError(expr.operator, right);
             }
         default:
-            return getUnknownOperatorError(expr.operator);
+            return getUnknownPrefixOperatorError(expr.operator, right);
     }
 }
 
@@ -315,6 +329,9 @@ function evaluateProgram(stmts: IStatement[]): IObject {
         if (result instanceof ReturnObj) {
             return result.value;
         }
+        if (result instanceof ErrorObj) {
+            return result;
+        }
     }
 
     return result;
@@ -325,7 +342,7 @@ function evaluateStatements(stmts: IStatement[]): IObject {
 
     for (const stmt of stmts) {
         result = evaluate(stmt);
-        if (result instanceof ReturnObj) {
+        if (result instanceof ReturnObj || result instanceof ErrorObj) {
             return result;
         }
     }
@@ -340,16 +357,14 @@ function nativeBooleanToBooleanObject(input: boolean): BooleanObj {
     return FALSE;
 }
 
-function getIncompatibleOperatorError(
+function getIncompatibleTypesError(
     left: IObject,
     operator: string,
-    right: IObject | null = null
+    right: IObject
 ): ErrorObj {
-    const msg = right
-        ? `cannot apply '${operator}' on '${left.getType()}' and '${right.getType()}'`
-        : `cannot apply '${operator}' on '${left.getType()}'`;
-
-    return new ErrorObj(msg);
+    return new ErrorObj(
+        `type mismatch: ${left.getType()} ${operator} ${right.getType()}`
+    );
 }
 
 function getUnrecognizedStatementError(node: INode): ErrorObj {
@@ -360,8 +375,21 @@ function getExpressionEvaluationFailedError(expr: IExpression): ErrorObj {
     return new ErrorObj(`failed to evaluate expression '${expr.toString()}'`);
 }
 
-function getUnknownOperatorError(operator: string): ErrorObj {
-    return new ErrorObj(`unknown operator '${operator}'`);
+function getUnknownInfixOperatorError(
+    left: IObject,
+    operator: string,
+    right: IObject
+): ErrorObj {
+    return new ErrorObj(
+        `unknown operator: ${left.getType()} ${operator} ${right.getType()}`
+    );
+}
+
+function getUnknownPrefixOperatorError(
+    operator: string,
+    right: IObject
+): ErrorObj {
+    return new ErrorObj(`unknown operator: ${operator}${right.getType()}`);
 }
 
 function isTruthy(obj: IObject): boolean {

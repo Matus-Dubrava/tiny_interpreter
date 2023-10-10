@@ -1,7 +1,45 @@
-import { BooleanObj, IObject, IntObj, NullObj } from '../../object';
+import { BooleanObj, ErrorObj, IObject, IntObj, NullObj } from '../../object';
 import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
 import { evaluate } from '..';
+
+test('test error handling', () => {
+    const tests = [
+        { input: '5 + true;', expected: 'type mismatch: INTEGER + BOOLEAN' },
+        { input: '5 + true; 5;', expected: 'type mismatch: INTEGER + BOOLEAN' },
+        { input: '-true', expected: 'unknown operator: -BOOLEAN' },
+        {
+            input: 'true + false;',
+            expected: 'unknown operator: BOOLEAN + BOOLEAN',
+        },
+        {
+            input: '5; true + false; 5',
+            expected: 'unknown operator: BOOLEAN + BOOLEAN',
+        },
+        {
+            input: 'if (10 > 1) { true + false; }',
+            expected: 'unknown operator: BOOLEAN + BOOLEAN',
+        },
+        {
+            input: `
+            132
+            if (10 > 1) {
+                if (10 > 1) {
+                    return true + false;
+                }
+                return 1;
+            }
+            `,
+            expected: 'unknown operator: BOOLEAN + BOOLEAN',
+        },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+        const evaluated = testEval(input);
+        expect(evaluated).not.toBeNull();
+        testErrorObject(evaluated!, expected);
+    });
+});
 
 test('test evaluate return statement', () => {
     const tests = [
@@ -161,16 +199,21 @@ function testEval(input: string): IObject | null {
     return evaluate(program);
 }
 
+function testErrorObject(obj: IObject, expected: string): void {
+    expect(obj).toBeInstanceOf(ErrorObj);
+    expect((obj as ErrorObj).value).toEqual(expected);
+}
+
 function testNullObject(obj: IObject): void {
     expect(obj).toBeInstanceOf(NullObj);
 }
 
-function testBooleanObject(obj: IObject, expected: boolean) {
+function testBooleanObject(obj: IObject, expected: boolean): void {
     expect(obj).toBeInstanceOf(BooleanObj);
     expect((obj as BooleanObj).value).toEqual(expected);
 }
 
-function testIntegerObject(obj: IObject, expected: number) {
+function testIntegerObject(obj: IObject, expected: number): void {
     expect(obj).toBeInstanceOf(IntObj);
     expect((obj as IntObj).value).toEqual(expected);
 }
