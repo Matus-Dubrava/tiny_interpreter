@@ -1,4 +1,4 @@
-import { BooleanObj, IObject, IntObj } from '../../object';
+import { BooleanObj, IObject, IntObj, NullObj } from '../../object';
 import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
 import { evaluate } from '..';
@@ -93,11 +93,37 @@ test('test evaluate infix boolean expression', () => {
     });
 });
 
+test('test evaluate if/else expression', () => {
+    const tests = [
+        { input: 'if (true) { 10 }', expected: 10 },
+        { input: 'if (false) { 10 }', expected: null },
+        { input: 'if (1) { 10 }', expected: 10 },
+        { input: 'if (1 < 2) { 10 }', expected: 10 },
+        { input: 'if (1 > 2) { 10 }', expected: null },
+        { input: 'if (1 > 2) { 10 } else { 20 }', expected: 20 },
+        { input: 'if (1 < 2) { 10 } else { 20 }', expected: 10 },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+        const evaluated = testEval(input);
+        expect(evaluated).not.toBeNull();
+        if (evaluated instanceof IntObj) {
+            testIntegerObject(evaluated, expected!);
+        } else {
+            testNullObject(evaluated!);
+        }
+    });
+});
+
 function testEval(input: string): IObject | null {
     const lexer = new Lexer(input);
     const parser = new Parser(lexer);
     const program = parser.parseProgram();
     return evaluate(program);
+}
+
+function testNullObject(obj: IObject): void {
+    expect(obj).toBeInstanceOf(NullObj);
 }
 
 function testBooleanObject(obj: IObject, expected: boolean) {

@@ -8,13 +8,16 @@ import {
     BooleanLiteral,
     PrefixExpression,
     InfixExpression,
+    IfExpression,
+    BlockStatement,
+    IExpression,
 } from '../ast';
 
 const TRUE = new BooleanObj(true);
 const FALSE = new BooleanObj(false);
 const NULL = new NullObj();
 
-export function evaluate(node: INode): IObject | null {
+export function evaluate(node: INode): IObject {
     if (node instanceof Program) {
         return evaluateStatements(node.stmts);
     } else if (node instanceof ExpressionStatement) {
@@ -28,19 +31,49 @@ export function evaluate(node: INode): IObject | null {
         if (right) {
             return evaluatePrefixExpression(node.operator, right);
         }
-        // do we want to return null or error here
-        return null;
+        if (!right) {
+            return getExpressionEvaluationFailedError(node.expr);
+        }
     } else if (node instanceof InfixExpression) {
         const left = evaluate(node.left);
         const right = evaluate(node.right);
         if (left && right) {
             return evaluateInfixExpression(left, node.operator, right);
         }
-        // do we want to return null or error here
-        return null;
+        if (!left) {
+            return getExpressionEvaluationFailedError(node.left);
+        }
+        if (!right) {
+            return getExpressionEvaluationFailedError(node.right);
+        }
+    } else if (node instanceof IfExpression) {
+        return evaluateIfExpresion(
+            node.condition,
+            node.consequence,
+            node.alternative
+        );
     }
 
-    return null;
+    return NULL;
+}
+
+function evaluateIfExpresion(
+    condition: IExpression,
+    consequence: BlockStatement,
+    alternative: BlockStatement | null
+): IObject {
+    const evaluatedCondition = evaluate(condition);
+    if (!evaluatedCondition) {
+        return getExpressionEvaluationFailedError(condition);
+    }
+
+    if (isTruthy(evaluatedCondition)) {
+        return evaluateStatements(consequence.stmts);
+    } else if (alternative) {
+        return evaluateStatements(alternative.stmts);
+    }
+
+    return NULL;
 }
 
 function evaluateInfixExpression(
@@ -270,8 +303,8 @@ function evaluatePrefixExpression(operator: string, right: IObject): IObject {
     }
 }
 
-function evaluateStatements(stmts: IStatement[]): IObject | null {
-    let result: IObject | null = null;
+function evaluateStatements(stmts: IStatement[]): IObject {
+    let result: IObject = NULL;
     stmts.forEach((stmt) => {
         result = evaluate(stmt);
     });
@@ -293,4 +326,21 @@ function getIncompatibleInfixTypesError(
     return new ErrorObj(
         `cannot apply '${operator}' on '${left.getType()}' and '${right.getType()}'`
     );
+}
+
+function getExpressionEvaluationFailedError(expr: IExpression): ErrorObj {
+    return new ErrorObj(`failed to evaluate expression '${expr.toString()}'`);
+}
+
+function isTruthy(obj: IObject): boolean {
+    switch (obj) {
+        case TRUE:
+            return true;
+        case FALSE:
+            return false;
+        case NULL:
+            return false;
+        default:
+            return true;
+    }
 }
