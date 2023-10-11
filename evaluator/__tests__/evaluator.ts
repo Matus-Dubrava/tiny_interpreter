@@ -110,14 +110,29 @@ test('test closures', () => {
 });
 
 test('test recursive functions', () => {
-    const input = `
+    let input = `
         let factorial = fn(n) { if (n <= 1) {1} else { factorial(n-1) * n} };
         factorial(5);
     `;
 
-    const evaluated = testEval(input);
+    let evaluated = testEval(input);
     expect(evaluated).not.toBeNull();
     testIntegerObject(evaluated!, 120);
+
+    input = `
+        let fibonacci = fn(n) {
+            if (n < 2) {
+                n
+            } else {
+                fibonacci(n - 1) + fibonacci(n - 2)
+            }
+        };
+        fibonacci(15);
+    `;
+
+    evaluated = testEval(input);
+    expect(evaluated).not.toBeNull();
+    testIntegerObject(evaluated!, 610);
 });
 
 test('test evaluate let statement', () => {
