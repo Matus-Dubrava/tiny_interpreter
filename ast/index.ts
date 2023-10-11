@@ -135,6 +135,26 @@ export class IntLiteral implements IExpression {
     }
 }
 
+export class StringLiteral implements IExpression {
+    token: Token;
+    value: string;
+
+    constructor(token: Token, value: string) {
+        this.token = token;
+        this.value = value;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return this.value;
+    }
+}
+
 export class BooleanLiteral implements IExpression {
     token: Token;
     value: boolean;

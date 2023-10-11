@@ -41,7 +41,7 @@ test('test lexer with more input', () => {
         10 != 9;
         `;
 
-    const tests = [
+    const tokens = [
         { type: TokenType.Let, literal: 'let' },
         { type: TokenType.Ident, literal: 'five' },
         { type: TokenType.Assign, literal: '=' },
@@ -123,8 +123,28 @@ test('test lexer with more input', () => {
 
     const lex = new Lexer(input);
 
-    for (const token of tests) {
+    for (const token of tokens) {
         expect(lex.nextToken()).toEqual(token);
+    }
+});
+
+test('test lexer with string input', () => {
+    const input = `
+        "foobar";
+        "foo bar"
+    `;
+
+    const tokens = [
+        { type: TokenType.String, literal: 'foobar' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.String, literal: 'foo bar' },
+        { type: TokenType.EOF, literal: '' },
+    ];
+
+    const lexer = new Lexer(input);
+
+    for (const token of tokens) {
+        expect(token).toEqual(lexer.nextToken());
     }
 });
 

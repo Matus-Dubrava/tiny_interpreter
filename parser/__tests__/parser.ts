@@ -13,6 +13,7 @@ import {
     IfExpression,
     FunctionLiteral,
     CallExpression,
+    StringLiteral,
 } from '../../ast';
 import { Parser } from '../index';
 
@@ -176,6 +177,39 @@ test('test parse function literal containing if expression', () => {
     const program = parser.parseProgram();
     checkParseErrors(parser);
     expect(program.stmts.length).toEqual(2);
+});
+
+test('test parse string literal', () => {
+    const input = `"Hello world!"`;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(1);
+
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(StringLiteral);
+    expect((expr as StringLiteral).value).toEqual('Hello world!');
+});
+
+test('test parse infix string operations', () => {
+    const input = `"hello" + "world"`;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(1);
+
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(InfixExpression);
+    const infixExpr = expr as InfixExpression;
+    expect(infixExpr.operator).toEqual('+');
+    expect(infixExpr.left).toBeInstanceOf(StringLiteral);
+    expect((infixExpr.left as StringLiteral).value).toEqual('hello');
+    expect(infixExpr.right).toBeInstanceOf(StringLiteral);
+    expect((infixExpr.right as StringLiteral).value).toEqual('world');
 });
 
 test('test parse if expression', () => {

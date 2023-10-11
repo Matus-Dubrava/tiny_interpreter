@@ -15,6 +15,7 @@ import {
     BlockStatement,
     FunctionLiteral,
     CallExpression,
+    StringLiteral,
 } from '../ast';
 
 type PrefixParseFn = () => IExpression | null;
@@ -82,6 +83,10 @@ export class Parser {
         this.registerPrefixFn(
             TokenType.Function,
             this.parseFunctionLiteral.bind(this)
+        );
+        this.registerPrefixFn(
+            TokenType.String,
+            this.parseStringLiteral.bind(this)
         );
 
         this.registerInfixFn(
@@ -203,6 +208,10 @@ export class Parser {
         this.advanceToSemicoloIfExists();
 
         return new ExpressionStatement(curTok, expr);
+    }
+
+    parseStringLiteral() {
+        return new StringLiteral(this.curTok, this.curTok.literal);
     }
 
     parseInt(): IExpression {

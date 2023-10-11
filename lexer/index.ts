@@ -32,6 +32,7 @@ export const TokenType = {
     Or: '||',
     And: '&&',
     Percent: '%',
+    String: 'STRING',
 };
 
 export type TokenItem = (typeof TokenType)[keyof typeof TokenType];
@@ -166,6 +167,14 @@ export class Lexer {
                     tok = createToken(TokenType.Illegal, this.ch);
                 }
                 break;
+            case `"`:
+                const stringToken = this.readString();
+                if (stringToken) {
+                    tok = stringToken;
+                } else {
+                    tok = createToken(TokenType.Illegal, this.ch);
+                }
+                break;
             case '\0':
                 tok = createToken(TokenType.EOF, '');
                 break;
@@ -201,6 +210,21 @@ export class Lexer {
         while (this.ch == ' ' || this.ch == '\n' || this.ch == '\t') {
             this.readChar();
         }
+    }
+
+    readString(): Token | null {
+        const position = this.position;
+        this.readChar();
+        while (this.ch !== `"`) {
+            if (this.ch === '\0') {
+                return null;
+            }
+            this.readChar();
+        }
+        return createToken(
+            TokenType.String,
+            this.input.substring(position, this.position - 1)
+        );
     }
 
     readTwoCharToken(): Token | null {

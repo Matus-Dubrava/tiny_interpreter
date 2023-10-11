@@ -6,6 +6,7 @@ import {
     IntObj,
     NullObj,
     ReturnObj,
+    StringObj,
 } from '../object';
 import {
     INode,
@@ -16,6 +17,7 @@ import {
     IStatement,
     BooleanLiteral,
     PrefixExpression,
+    StringLiteral,
     InfixExpression,
     IfExpression,
     BlockStatement,
@@ -62,6 +64,8 @@ export class Evaluator {
             return this.evaluateFunction(node, env);
         } else if (node instanceof CallExpression) {
             return this.evaluateFunctionCall(node, env);
+        } else if (node instanceof StringLiteral) {
+            return new StringObj(node.value);
         }
 
         return Evaluator.getUnrecognizedStatementError(node);
@@ -194,11 +198,12 @@ export class Evaluator {
         }
 
         // Here we are checking whether the types are compatible.
-        // Right now there are only 2 types - bool & int - which
-        // cannot be mixed.
+        // Currently, we support operations only on operands that
+        // are of the exact same type.
         if (
             !(
                 (left instanceof IntObj && right instanceof IntObj) ||
+                (left instanceof StringObj && right instanceof StringObj) ||
                 (left instanceof BooleanObj && right instanceof BooleanObj)
             )
         ) {
@@ -422,6 +427,8 @@ export class Evaluator {
     ): IObject {
         if (left instanceof IntObj && right instanceof IntObj) {
             return new IntObj(left.value + right.value);
+        } else if (left instanceof StringObj && right instanceof StringObj) {
+            return new StringObj(left.value + right.value);
         } else {
             return Evaluator.getUnknownInfixOperatorError(
                 left,

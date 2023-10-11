@@ -8,6 +8,7 @@ export const ObjectType = {
     ERROR_OBJ: 'ERROR',
     RETUNR_OBJ: 'RETURN',
     FUNCTION_OBJ: 'FUNCTION',
+    STRING_OBJ: 'STRING',
 } as const;
 
 type ObjectType = (typeof ObjectType)[keyof typeof ObjectType];
@@ -30,6 +31,22 @@ export class IntObj implements IObject {
 
     toString(): string {
         return `${this.value}`;
+    }
+}
+
+export class StringObj implements IObject {
+    value: string;
+
+    constructor(value: string) {
+        this.value = value;
+    }
+
+    getType(): ObjectType {
+        return ObjectType.STRING_OBJ;
+    }
+
+    toString(): string {
+        return this.value;
     }
 }
 

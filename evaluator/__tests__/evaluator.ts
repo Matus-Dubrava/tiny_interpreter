@@ -5,6 +5,7 @@ import {
     IObject,
     IntObj,
     NullObj,
+    StringObj,
 } from '../../object';
 import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
@@ -43,6 +44,10 @@ test('test error handling', () => {
         {
             input: 'foobar',
             expected: 'identifier not found: foobar',
+        },
+        {
+            input: '"hello" - "world"',
+            expected: 'unknown operator: STRING - STRING',
         },
     ];
 
@@ -93,6 +98,24 @@ test('test function application', () => {
         expect(evaluated).not.toBeNull();
         testIntegerObject(evaluated!, expected);
     });
+});
+
+test('test evaluate string literal', () => {
+    const input = `"hello world!"`;
+
+    const evaluated = testEval(input);
+    expect(evaluated).not.toBeNull();
+    expect(evaluated).toBeInstanceOf(StringObj);
+    expect((evaluated as StringObj).value).toEqual('hello world!');
+});
+
+test('test evaluate string concatenation', () => {
+    const input = `"hello" + " " + "world!"`;
+
+    const evaluated = testEval(input);
+    expect(evaluated).not.toBeNull();
+    expect(evaluated).toBeInstanceOf(StringObj);
+    expect((evaluated as StringObj).value).toEqual('hello world!');
 });
 
 test('test closures', () => {
