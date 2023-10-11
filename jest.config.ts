@@ -4,6 +4,7 @@
  */
 
 export default {
+    // testMatch: ['**/__tests__/*parser.ts'],
     // All imported modules in your tests should be mocked automatically
     // automock: false,
 

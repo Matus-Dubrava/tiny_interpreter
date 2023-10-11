@@ -332,7 +332,7 @@ export class Parser {
         const curTok = this.curTok;
 
         this.expectPeekTokenToBeAndAdvance(TokenType.LParen);
-        this.nextToken(); // start of expression
+        this.nextToken();
 
         const condition = this.parseExpression(Precedence.LOWEST);
         if (!condition) {
@@ -348,19 +348,18 @@ export class Parser {
         }
 
         const consequence = this.parseBlockStatement();
-        this.nextToken();
 
-        if (this.curTok.type !== TokenType.Else) {
+        if (this.peekTok.type !== TokenType.Else) {
             return new IfExpression(curTok, condition, consequence);
         }
+
+        this.nextToken();
 
         if (!this.expectPeekTokenToBeAndAdvance(TokenType.LBrace)) {
             return null;
         }
 
         const alternative = this.parseBlockStatement();
-
-        this.nextToken();
 
         return new IfExpression(curTok, condition, consequence, alternative);
     }

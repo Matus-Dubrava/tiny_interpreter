@@ -198,3 +198,50 @@ test('test lexer identifiers', () => {
         expect(lex.nextToken()).toEqual(token);
     }
 });
+
+test('test lexer identifiers', () => {
+    const input = `
+        let f = fn(x) { if (true) { return x; } else { return x; }};
+        return f(true);
+    `;
+    const tokens = [
+        { type: TokenType.Let, literal: 'let' },
+        { type: TokenType.Ident, literal: 'f' },
+        { type: TokenType.Assign, literal: '=' },
+        { type: TokenType.Function, literal: 'fn' },
+        { type: TokenType.LParen, literal: '(' },
+        { type: TokenType.Ident, literal: 'x' },
+        { type: TokenType.RParen, literal: ')' },
+        { type: TokenType.LBrace, literal: '{' },
+        { type: TokenType.If, literal: 'if' },
+        { type: TokenType.LParen, literal: '(' },
+        { type: TokenType.True, literal: 'true' },
+        { type: TokenType.RParen, literal: ')' },
+        { type: TokenType.LBrace, literal: '{' },
+        { type: TokenType.Return, literal: 'return' },
+        { type: TokenType.Ident, literal: 'x' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.RBrace, literal: '}' },
+        { type: TokenType.Else, literal: 'else' },
+        { type: TokenType.LBrace, literal: '{' },
+        { type: TokenType.Return, literal: 'return' },
+        { type: TokenType.Ident, literal: 'x' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.RBrace, literal: '}' },
+        { type: TokenType.RBrace, literal: '}' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.Return, literal: 'return' },
+        { type: TokenType.Ident, literal: 'f' },
+        { type: TokenType.LParen, literal: '(' },
+        { type: TokenType.True, literal: 'true' },
+        { type: TokenType.RParen, literal: ')' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.EOF, literal: '' },
+    ];
+
+    const lex = new Lexer(input);
+
+    for (const token of tokens) {
+        expect(lex.nextToken()).toEqual(token);
+    }
+});

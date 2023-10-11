@@ -35,6 +35,7 @@ const FALSE = new BooleanObj(false);
 const NULL = new NullObj();
 
 export function evaluate(node: INode, env: ProgramEnvironment): IObject {
+    // console.log('evaluating', node.toString());
     if (node instanceof Program) {
         return evaluateProgram(node.stmts, env);
     } else if (node instanceof BlockStatement) {
@@ -140,6 +141,7 @@ function evaluateFunction(
     fn: FunctionLiteral,
     env: ProgramEnvironment
 ): IObject {
+    // console.log('eval function: ', fn);
     return new FunctionObject(fn.parameters, fn.body, env);
 }
 

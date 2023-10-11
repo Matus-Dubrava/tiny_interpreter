@@ -165,6 +165,19 @@ test('test parse function literal', () => {
     expect(fnExpr.body.stmts.length).toEqual(1);
 });
 
+test('test parse function literal containing if expression', () => {
+    const input = `
+        fn(x, y) { if (true) { 1 } else { 2 } }
+        x(1, 2);
+    `;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(2);
+});
+
 test('test parse if expression', () => {
     const input = 'if (x < y) { x }';
 

@@ -109,22 +109,16 @@ test('test closures', () => {
     testIntegerObject(evaluated!, 4);
 });
 
-// test('test recursive functions', () => {
-//     const input = `
-//         let factorial = fn(n) { if (n <= 1) { 1; } else { factorial(n - 1) * n; }}
-//         return 5;
-//         factorial(5);
-//     `;
+test('test recursive functions', () => {
+    const input = `
+        let factorial = fn(n) { if (n <= 1) {1} else { factorial(n-1) * n} };
+        factorial(5);
+    `;
 
-//     const input2 = `
-//         let a = fn(x) { let add = fn(x) {x + 1}; add(x); };
-//         a(1);
-//     `;
-
-//     const evaluated = testEval(input2);
-//     expect(evaluated).not.toBeNull();
-//     testIntegerObject(evaluated!, 2);
-// });
+    const evaluated = testEval(input);
+    expect(evaluated).not.toBeNull();
+    testIntegerObject(evaluated!, 120);
+});
 
 test('test evaluate let statement', () => {
     const tests = [
