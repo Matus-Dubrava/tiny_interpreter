@@ -1,5 +1,6 @@
 import {
     BooleanObj,
+    BuiltinObj,
     ErrorObj,
     FunctionObject,
     IObject,
@@ -31,10 +32,8 @@ import {
     ProgramEnvironment,
     createEnclosedEnvironment,
 } from '../object/environment';
-
-const TRUE = new BooleanObj(true);
-const FALSE = new BooleanObj(false);
-const NULL = new NullObj();
+import { TRUE, FALSE, NULL } from '../object';
+import { Builtins } from './builtins';
 
 export class Evaluator {
     evaluate(node: INode, env: ProgramEnvironment): IObject {
@@ -77,7 +76,6 @@ export class Evaluator {
     ): IObject {
         // func: IExpression; // this can be either an Identifier or Function
         // args: IExpression[];
-
         let fn = this.evaluate(callExpr.func, env);
         if (fn instanceof ErrorObj) {
             return fn;
@@ -92,13 +90,15 @@ export class Evaluator {
     }
 
     applyFunction(fn: IObject, args: IObject[]): IObject {
-        if (!(fn instanceof FunctionObject)) {
-            return new ErrorObj(`not a function: ${fn.getType()}`);
+        if (fn instanceof FunctionObject) {
+            const env = this.extendFunctionEnvironment(fn, args);
+            const evaluated = this.evaluateStatements(fn.body.stmts, env);
+            return this.unwrapReturnValue(evaluated);
+        } else if (fn instanceof BuiltinObj) {
+            return fn.fn(...args);
         }
 
-        const env = this.extendFunctionEnvironment(fn, args);
-        const evaluated = this.evaluateStatements(fn.body.stmts, env);
-        return this.unwrapReturnValue(evaluated);
+        return new ErrorObj(`not a function: ${fn.getType()}`);
     }
 
     extendFunctionEnvironment(
@@ -145,9 +145,16 @@ export class Evaluator {
 
     evaluateIdentifier(ident: Identifier, env: ProgramEnvironment): IObject {
         const value = env.get(ident.name);
-        return value
-            ? value
-            : new ErrorObj(`identifier not found: ${ident.name}`);
+        if (value) {
+            return value;
+        }
+
+        const builtin = Builtins.get(ident.name);
+        if (builtin) {
+            return builtin;
+        }
+
+        return new ErrorObj(`identifier not found: ${ident.name}`);
     }
 
     evaluateLetStatement(stmt: Let, env: ProgramEnvironment): IObject {

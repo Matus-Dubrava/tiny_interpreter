@@ -9,9 +9,11 @@ export const ObjectType = {
     RETUNR_OBJ: 'RETURN',
     FUNCTION_OBJ: 'FUNCTION',
     STRING_OBJ: 'STRING',
+    BUILTIN_OBJ: 'BUILTIN',
 } as const;
 
-type ObjectType = (typeof ObjectType)[keyof typeof ObjectType];
+export type ObjectType = (typeof ObjectType)[keyof typeof ObjectType];
+export type BuilinFunction = (...args: IObject[]) => IObject;
 
 export interface IObject {
     getType(): ObjectType;
@@ -78,6 +80,22 @@ export class NullObj implements IObject {
     }
 }
 
+export class BuiltinObj implements IObject {
+    fn: BuilinFunction;
+
+    constructor(fn: BuilinFunction) {
+        this.fn = fn;
+    }
+
+    getType(): ObjectType {
+        return ObjectType.BUILTIN_OBJ;
+    }
+
+    toString(): string {
+        return 'builtin function';
+    }
+}
+
 export class ErrorObj implements IObject {
     value: string;
 
@@ -135,3 +153,7 @@ export class FunctionObject implements IObject {
             .join(', ')}) {\n${this.body.toString()}}\n`;
     }
 }
+
+export const TRUE = new BooleanObj(true);
+export const FALSE = new BooleanObj(false);
+export const NULL = new NullObj();

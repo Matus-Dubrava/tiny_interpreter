@@ -12,6 +12,34 @@ import { Parser } from '../../parser';
 import { Evaluator } from '..';
 import { ProgramEnvironment } from '../../object/environment';
 
+test('test builtin functions', () => {
+    const tests = [
+        { input: `len("")`, expected: 0 },
+        { input: `len("four")`, expected: 4 },
+        { input: `len("hello world")`, expected: 11 },
+        {
+            input: `len(1)`,
+            expected: `argument to 'len' not supported, got INTEGER`,
+        },
+        {
+            input: `len("one", "two")`,
+            expected: 'wrong number of arguments. got=2, expected=1',
+        },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+        const evaluated = testEval(input);
+
+        if (typeof expected === 'number') {
+            expect(evaluated).toBeInstanceOf(IntObj);
+            testIntegerObject(evaluated as IntObj, Number(expected));
+        } else if (typeof expected === 'string') {
+            expect(evaluated).toBeInstanceOf(ErrorObj);
+            expect((evaluated as ErrorObj).value).toEqual(expected);
+        }
+    });
+});
+
 test('test error handling', () => {
     const tests = [
         { input: '5 + true;', expected: 'type mismatch: INTEGER + BOOLEAN' },
