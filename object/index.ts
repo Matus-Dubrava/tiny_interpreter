@@ -1,4 +1,4 @@
-import { BlockStatement, Identifier } from '../ast';
+import { BlockStatement, IExpression, Identifier } from '../ast';
 import { ProgramEnvironment } from './environment';
 
 export const ObjectType = {
@@ -10,6 +10,7 @@ export const ObjectType = {
     FUNCTION_OBJ: 'FUNCTION',
     STRING_OBJ: 'STRING',
     BUILTIN_OBJ: 'BUILTIN',
+    ARRAY_OBJ: 'ARRAY',
 } as const;
 
 export type ObjectType = (typeof ObjectType)[keyof typeof ObjectType];
@@ -151,6 +152,21 @@ export class FunctionObject implements IObject {
         return `fn(${this.params
             .map((param) => param.toString())
             .join(', ')}) {\n${this.body.toString()}}\n`;
+    }
+}
+
+export class ArrayObj implements IObject {
+    elements: IObject[];
+
+    constructor(elements: IObject[]) {
+        this.elements = elements;
+    }
+
+    getType(): ObjectType {
+        return ObjectType.ARRAY_OBJ;
+    }
+    toString(): string {
+        return `[${this.elements.map((el) => el.toString()).join(', ')}]`;
     }
 }
 

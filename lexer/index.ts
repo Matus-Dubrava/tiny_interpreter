@@ -33,6 +33,8 @@ export const TokenType = {
     And: '&&',
     Percent: '%',
     String: 'STRING',
+    LBracket: '[',
+    RBracket: ']',
 };
 
 export type TokenItem = (typeof TokenType)[keyof typeof TokenType];
@@ -86,6 +88,12 @@ export class Lexer {
         this.eatWhitespace();
 
         switch (this.ch) {
+            case '[':
+                tok = createToken(TokenType.LBracket, '[');
+                break;
+            case ']':
+                tok = createToken(TokenType.RBracket, ']');
+                break;
             case '%':
                 tok = createToken(TokenType.Percent, this.ch);
                 break;

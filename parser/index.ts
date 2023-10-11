@@ -16,6 +16,8 @@ import {
     FunctionLiteral,
     CallExpression,
     StringLiteral,
+    ArrayLiteral,
+    IndexExpression,
 } from '../ast';
 
 type PrefixParseFn = () => IExpression | null;
@@ -31,6 +33,7 @@ enum Precedence {
     PRODUCT,
     PREFIX,
     CALL,
+    INDEX,
 }
 
 const operatorPrecedence = {
@@ -48,6 +51,7 @@ const operatorPrecedence = {
     [TokenType.And]: Precedence.LOGICAL_AND,
     [TokenType.Or]: Precedence.LOGICAL_OR,
     [TokenType.LParen]: Precedence.CALL,
+    [TokenType.LBracket]: Precedence.INDEX,
 } as const;
 
 export class Parser {
@@ -87,6 +91,10 @@ export class Parser {
         this.registerPrefixFn(
             TokenType.String,
             this.parseStringLiteral.bind(this)
+        );
+        this.registerPrefixFn(
+            TokenType.LBracket,
+            this.parseArrayLiteral.bind(this)
         );
 
         this.registerInfixFn(
@@ -144,6 +152,10 @@ export class Parser {
         this.registerInfixFn(
             TokenType.LParen,
             this.parseCallExpression.bind(this)
+        );
+        this.registerInfixFn(
+            TokenType.LBracket,
+            this.parseIndexExpression.bind(this)
         );
     }
 
@@ -335,6 +347,56 @@ export class Parser {
         }
 
         return expr;
+    }
+
+    parseArrayLiteral(): IExpression | null {
+        const curTok = this.curTok;
+        const elements: IExpression[] = [];
+
+        while (this.peekTok.type !== TokenType.RBracket) {
+            this.nextToken();
+            const expr = this.parseExpression(Precedence.LOWEST);
+            if (!expr) {
+                this.errors.push(
+                    `Failed to parse array element. Got=${this.curTok.type}}`
+                );
+                return null;
+            }
+            elements.push(expr);
+
+            if (
+                this.peekTok.type !== TokenType.Comma &&
+                this.peekTok.type !== TokenType.RBracket
+            ) {
+                this.errors.push(
+                    `Failed to parse array. Expected ',' or ']', got='${this.peekTok.type}'`
+                );
+                return null;
+            }
+
+            if (this.peekTok.type === TokenType.Comma) {
+                this.nextToken();
+            }
+        }
+
+        this.nextToken();
+
+        return new ArrayLiteral(curTok, elements);
+    }
+
+    parseIndexExpression(left: IExpression): IExpression | null {
+        const curTok = this.curTok;
+        this.nextToken();
+
+        const expr = this.parseExpression(Precedence.LOWEST);
+
+        this.expectPeekTokenToBeAndAdvance(TokenType.RBracket);
+
+        if (expr) {
+            return new IndexExpression(curTok, left, expr);
+        } else {
+            return null;
+        }
     }
 
     parseIfExpression(): IExpression | null {

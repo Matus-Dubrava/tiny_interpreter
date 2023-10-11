@@ -1,4 +1,5 @@
 import {
+    ArrayObj,
     BooleanObj,
     BuiltinObj,
     ErrorObj,
@@ -27,6 +28,8 @@ import {
     Identifier,
     FunctionLiteral,
     CallExpression,
+    ArrayLiteral,
+    IndexExpression,
 } from '../ast';
 import {
     ProgramEnvironment,
@@ -65,9 +68,54 @@ export class Evaluator {
             return this.evaluateFunctionCall(node, env);
         } else if (node instanceof StringLiteral) {
             return new StringObj(node.value);
+        } else if (node instanceof ArrayLiteral) {
+            return this.evaluateArrayLiteral(node, env);
+        } else if (node instanceof IndexExpression) {
+            return this.evaluateIndexExpression(node, env);
         }
 
         return Evaluator.getUnrecognizedStatementError(node);
+    }
+
+    evaluateIndexExpression(
+        node: IndexExpression,
+        env: ProgramEnvironment
+    ): IObject {
+        const array = this.evaluate(node.left, env);
+        if (array instanceof ErrorObj) {
+            return array;
+        }
+
+        const index = this.evaluate(node.index, env);
+        if (array instanceof ErrorObj) {
+            return array;
+        }
+
+        if (!(array instanceof ArrayObj) || !(index instanceof IntObj)) {
+            return new ErrorObj(
+                `index operator not supported: ${array.getType()}`
+            );
+        }
+
+        return this.evaluateArrayIndexExpression(array, index);
+    }
+
+    evaluateArrayIndexExpression(array: ArrayObj, index: IntObj): IObject {
+        if (index.value < 0 || index.value >= array.elements.length) {
+            return new ErrorObj(
+                `index '${index.toString()}' outside of bounds for array with length: ${
+                    array.elements.length
+                }`
+            );
+        } else return array.elements[index.value];
+    }
+
+    evaluateArrayLiteral(node: ArrayLiteral, env: ProgramEnvironment): IObject {
+        const elements = this.evaluateExpressions(node.elements, env);
+        if (elements.length === 1 && elements[0] instanceof ErrorObj) {
+            return elements[0];
+        }
+        return new ArrayObj(elements);
     }
 
     evaluateFunctionCall(

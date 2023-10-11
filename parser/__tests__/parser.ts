@@ -14,6 +14,8 @@ import {
     FunctionLiteral,
     CallExpression,
     StringLiteral,
+    ArrayLiteral,
+    IndexExpression,
 } from '../../ast';
 import { Parser } from '../index';
 
@@ -89,6 +91,14 @@ test('test operator precendece', () => {
             input: 'add(a + b + c * d / f + g)',
             expected: 'add((((a + b) + ((c * d) / f)) + g))',
         },
+        {
+            input: 'a * [1, 2, 3, 4][b * c] * d',
+            expected: '((a * ([1, 2, 3, 4][(b * c)])) * d)',
+        },
+        {
+            input: 'add(a * b[2], b[1], 2 * [1, 2][1])',
+            expected: 'add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))',
+        },
     ];
 
     tests.forEach(({ input, expected }) => {
@@ -98,6 +108,41 @@ test('test operator precendece', () => {
         checkParseErrors(parser);
         expect(program.toString()).toEqual(expected);
     });
+});
+
+test('test parse array literal', () => {
+    const input = '[1, 2 * 2, 3 + 3]';
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(1);
+
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(ArrayLiteral);
+    const array = expr as ArrayLiteral;
+    expect(array.elements.length).toEqual(3);
+
+    testIntExpr(array.elements[0], 1);
+    testInfixExpression(array.elements[1], 2, '*', 2);
+    testInfixExpression(array.elements[2], 3, '+', 3);
+});
+
+test('test parse index expression', () => {
+    const input = 'arr[10 * 10]';
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(1);
+
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(IndexExpression);
+    const indexExpr = expr as IndexExpression;
+    testIdentifier(indexExpr.left, 'arr');
+    testInfixExpression(indexExpr.index, 10, '*', 10);
 });
 
 test('test parse call expression', () => {

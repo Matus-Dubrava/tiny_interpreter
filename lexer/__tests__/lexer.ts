@@ -39,6 +39,7 @@ test('test lexer with more input', () => {
 
         10 == 10;
         10 != 9;
+        [1, 2];
         `;
 
     const tokens = [
@@ -118,6 +119,15 @@ test('test lexer with more input', () => {
         { type: TokenType.NotEqual, literal: '!=' },
         { type: TokenType.Int, literal: '9' },
         { type: TokenType.Semicolon, literal: ';' },
+
+        // [1, 2];
+        { type: TokenType.LBracket, literal: '[' },
+        { type: TokenType.Int, literal: '1' },
+        { type: TokenType.Comma, literal: ',' },
+        { type: TokenType.Int, literal: '2' },
+        { type: TokenType.RBracket, literal: ']' },
+        { type: TokenType.Semicolon, literal: ';' },
+
         { type: TokenType.EOF, literal: '' },
     ];
 

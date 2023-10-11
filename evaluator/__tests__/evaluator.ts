@@ -1,4 +1,5 @@
 import {
+    ArrayObj,
     BooleanObj,
     ErrorObj,
     FunctionObject,
@@ -11,6 +12,73 @@ import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
 import { Evaluator } from '..';
 import { ProgramEnvironment } from '../../object/environment';
+
+test('test array index expression', () => {
+    const tests = [
+        {
+            input: '[1, 2, 3][0]',
+            expected: 1,
+        },
+        {
+            input: '[1, 2, 3][1]',
+            expected: 2,
+        },
+        {
+            input: '[1, 2, 3][2]',
+            expected: 3,
+        },
+        {
+            input: 'let i = 0; [1][i];',
+            expected: 1,
+        },
+        {
+            input: '[1, 2, 3][1 + 1];',
+            expected: 3,
+        },
+        {
+            input: 'let myArray = [1, 2, 3]; myArray[2];',
+            expected: 3,
+        },
+        {
+            input: 'let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];',
+            expected: 6,
+        },
+        {
+            input: 'let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]',
+            expected: 2,
+        },
+        {
+            input: '[1, 2, 3][3]',
+            expected: null,
+        },
+        {
+            input: '[1, 2, 3][-1]',
+            expected: null,
+        },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+        const evaluated = testEval(input);
+        if (typeof expected === 'number') {
+            expect(evaluated).toBeInstanceOf(IntObj);
+            testIntegerObject(evaluated as IntObj, expected);
+        } else if (!expected) {
+            expect(evaluated).toBeInstanceOf(ErrorObj);
+        }
+    });
+});
+
+test('test array literals', () => {
+    const input = '[1, 2 * 2, 3 + 3]';
+
+    const evaluated = testEval(input);
+    expect(evaluated).not.toBeNull();
+    expect(evaluated).toBeInstanceOf(ArrayObj);
+    const arrayObj = evaluated as ArrayObj;
+    testIntegerObject(arrayObj.elements[0], 1);
+    testIntegerObject(arrayObj.elements[1], 4);
+    testIntegerObject(arrayObj.elements[2], 6);
+});
 
 test('test builtin functions', () => {
     const tests = [

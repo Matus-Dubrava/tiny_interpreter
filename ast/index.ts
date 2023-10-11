@@ -346,3 +346,45 @@ export class CallExpression implements IExpression {
             .join(', ')})`;
     }
 }
+
+export class ArrayLiteral implements IExpression {
+    token: Token;
+    elements: IExpression[];
+
+    constructor(token: Token, elements: IExpression[]) {
+        this.token = token;
+        this.elements = elements;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `[${this.elements.map((el) => el.toString()).join(', ')}]`;
+    }
+}
+
+export class IndexExpression implements IExpression {
+    token: Token;
+    left: IExpression;
+    index: IExpression;
+
+    constructor(token: Token, left: IExpression, index: IExpression) {
+        this.token = token;
+        this.left = left;
+        this.index = index;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `(${this.left.toString()}[${this.index.toString()}])`;
+    }
+}
