@@ -88,6 +88,20 @@ test('test function application', () => {
     });
 });
 
+test('test closures', () => {
+    const input = `
+        let newAdder = fn(x) {
+            fn(y) { x + y };
+        };
+        let addTwo = newAdder(2);
+        addTwo(2);
+    `;
+
+    const evaluated = testEval(input);
+    expect(evaluated).not.toBeNull();
+    testIntegerObject(evaluated!, 4);
+});
+
 test('test evaluate let statement', () => {
     const tests = [
         { input: 'let a = 5; a;', expected: 5 },
