@@ -29,7 +29,7 @@ test('test operator precendece', () => {
             input: 'a + b * c + d / e - f',
             expected: '(((a + (b * c)) + (d / e)) - f)',
         },
-        { input: '3 + 4; -5 * 5', expected: '(3 + 4)((-5) * 5)' },
+        { input: '3 + 4; -5 * 5', expected: '(3 + 4); ((-5) * 5)' },
         { input: '5 > 4 == 3 < 4', expected: '((5 > 4) == (3 < 4))' },
         { input: '5 < 4 != 3 > 4', expected: '((5 < 4) != (3 > 4))' },
         {

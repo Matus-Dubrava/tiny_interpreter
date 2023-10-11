@@ -49,7 +49,7 @@ export class Program implements INode {
     }
 
     toString() {
-        return this.stmts.map((stmt) => stmt.toString()).join('');
+        return this.stmts.map((stmt) => stmt.toString()).join('; ');
     }
 }
 
@@ -253,7 +253,7 @@ export class IfExpression implements IExpression {
     toString(): string {
         let out = `if (${this.condition}) {${this.consequence}}`;
         if (this.alternative) {
-            out += `else {${this.alternative}}`;
+            out += ` else {${this.alternative}}`;
         }
         return out;
     }
@@ -275,7 +275,7 @@ export class BlockStatement implements IStatement {
     }
 
     toString(): string {
-        return this.stmts.map((stmt) => stmt.toString()).join('');
+        return this.stmts.map((stmt) => stmt.toString()).join('; ');
     }
 }
 
