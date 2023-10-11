@@ -10,10 +10,10 @@ export const ObjectType = {
     FUNCTION_OBJ: 'FUNCTION',
 } as const;
 
-type ObjectTypeItem = (typeof ObjectType)[keyof typeof ObjectType];
+type ObjectType = (typeof ObjectType)[keyof typeof ObjectType];
 
 export interface IObject {
-    getType(): ObjectTypeItem;
+    getType(): ObjectType;
     toString(): string;
 }
 
@@ -24,7 +24,7 @@ export class IntObj implements IObject {
         this.value = value;
     }
 
-    getType(): ObjectTypeItem {
+    getType(): ObjectType {
         return ObjectType.INTEGER_OBJ;
     }
 
@@ -40,7 +40,7 @@ export class BooleanObj implements IObject {
         this.value = value;
     }
 
-    getType(): ObjectTypeItem {
+    getType(): ObjectType {
         return ObjectType.BOOLEAN_OBJ;
     }
 
@@ -52,7 +52,7 @@ export class BooleanObj implements IObject {
 export class NullObj implements IObject {
     value: null = null;
 
-    getType(): ObjectTypeItem {
+    getType(): ObjectType {
         return ObjectType.NULL_OBJ;
     }
 
@@ -68,7 +68,7 @@ export class ErrorObj implements IObject {
         this.value = value;
     }
 
-    getType(): ObjectTypeItem {
+    getType(): ObjectType {
         return ObjectType.ERROR_OBJ;
     }
 
@@ -84,7 +84,7 @@ export class ReturnObj implements IObject {
         this.value = value;
     }
 
-    getType(): ObjectTypeItem {
+    getType(): ObjectType {
         return ObjectType.RETUNR_OBJ;
     }
 
@@ -108,7 +108,7 @@ export class FunctionObject implements IObject {
         this.env = env;
     }
 
-    getType(): ObjectTypeItem {
+    getType(): ObjectType {
         return ObjectType.FUNCTION_OBJ;
     }
 
