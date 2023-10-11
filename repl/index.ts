@@ -1,7 +1,7 @@
 import * as readline from 'readline';
 import { Lexer } from '../lexer';
 import { Parser } from '../parser';
-import { evaluate } from '../evaluator';
+import { Evaluator } from '../evaluator';
 import { ProgramEnvironment } from '../object/environment';
 
 const env = new ProgramEnvironment();
@@ -21,7 +21,8 @@ export function repl() {
             rl.close();
             return;
         }
-        const evaluated = evaluate(program, env);
+        const evaluator = new Evaluator();
+        const evaluated = evaluator.evaluate(program, env);
         if (evaluated) {
             console.log(evaluated.toString());
         }

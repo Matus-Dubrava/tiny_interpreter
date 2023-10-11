@@ -8,7 +8,7 @@ import {
 } from '../../object';
 import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
-import { evaluate } from '..';
+import { Evaluator } from '..';
 import { ProgramEnvironment } from '../../object/environment';
 
 test('test error handling', () => {
@@ -307,7 +307,8 @@ function testEval(input: string): IObject | null {
     const program = parser.parseProgram();
     expect(parser.errors.length).toEqual(0);
     const env = new ProgramEnvironment();
-    return evaluate(program, env);
+    const evaluator = new Evaluator();
+    return evaluator.evaluate(program, env);
 }
 
 function testErrorObject(obj: IObject, expected: string): void {

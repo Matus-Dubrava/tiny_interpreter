@@ -34,505 +34,590 @@ const TRUE = new BooleanObj(true);
 const FALSE = new BooleanObj(false);
 const NULL = new NullObj();
 
-export function evaluate(node: INode, env: ProgramEnvironment): IObject {
-    // console.log('evaluating', node.toString());
-    if (node instanceof Program) {
-        return evaluateProgram(node.stmts, env);
-    } else if (node instanceof BlockStatement) {
-        return evaluateStatements(node.stmts, env);
-    } else if (node instanceof ExpressionStatement) {
-        return evaluate(node.expr, env);
-    } else if (node instanceof IntLiteral) {
-        return new IntObj(node.value);
-    } else if (node instanceof BooleanLiteral) {
-        return nativeBooleanToBooleanObject(node.value);
-    } else if (node instanceof PrefixExpression) {
-        return evaluatePrefixExpression(node, env);
-    } else if (node instanceof InfixExpression) {
-        return evaluateInfixExpression(node, env);
-    } else if (node instanceof IfExpression) {
-        return evaluateIfExpresion(node, env);
-    } else if (node instanceof Return) {
-        return evaluateReturnStatement(node, env);
-    } else if (node instanceof Let) {
-        return evaluateLetStatement(node, env);
-    } else if (node instanceof Identifier) {
-        return evaluateIdentifier(node, env);
-    } else if (node instanceof FunctionLiteral) {
-        return evaluateFunction(node, env);
-    } else if (node instanceof CallExpression) {
-        return evaluateFunctionCall(node, env);
-    }
-
-    return getUnrecognizedStatementError(node);
-}
-
-function evaluateFunctionCall(
-    callExpr: CallExpression,
-    env: ProgramEnvironment
-): IObject {
-    // func: IExpression; // this can be either an Identifier or Function
-    // args: IExpression[];
-
-    let fn = evaluate(callExpr.func, env);
-    if (fn instanceof ErrorObj) {
-        return fn;
-    }
-
-    const args = evaluateExpressions(callExpr.args, env);
-    if (args.length === 1 && args[0] instanceof ErrorObj) {
-        return args[0];
-    }
-
-    // ... implement applying arugments to function body
-    // be creating new inner function environment
-    return applyFunction(fn, args);
-}
-
-function applyFunction(fn: IObject, args: IObject[]): IObject {
-    if (!(fn instanceof FunctionObject)) {
-        return new ErrorObj(`not a function: ${fn.getType()}`);
-    }
-
-    const env = extendFunctionEnvironment(fn, args);
-    const evaluated = evaluateStatements(fn.body.stmts, env);
-    return unwrapReturnValue(evaluated);
-}
-
-function extendFunctionEnvironment(
-    fn: FunctionObject,
-    args: IObject[]
-): ProgramEnvironment {
-    const env = createEnclosedEnvironment(fn.env);
-
-    fn.params.forEach((param, i) => {
-        env.set(param.name, args[i]);
-    });
-
-    return env;
-}
-
-function unwrapReturnValue(obj: IObject): IObject {
-    if (obj instanceof ReturnObj) {
-        return obj.value;
-    }
-
-    return obj;
-}
-
-function evaluateExpressions(
-    expressions: IExpression[],
-    env: ProgramEnvironment
-): IObject[] {
-    const result: IObject[] = [];
-
-    for (const expr of expressions) {
-        const evaluated = evaluate(expr, env);
-        if (evaluated instanceof ErrorObj) {
-            return [evaluated];
+export class Evaluator {
+    evaluate(node: INode, env: ProgramEnvironment): IObject {
+        if (node instanceof Program) {
+            return this.evaluateProgram(node.stmts, env);
+        } else if (node instanceof BlockStatement) {
+            return this.evaluateStatements(node.stmts, env);
+        } else if (node instanceof ExpressionStatement) {
+            return this.evaluate(node.expr, env);
+        } else if (node instanceof IntLiteral) {
+            return new IntObj(node.value);
+        } else if (node instanceof BooleanLiteral) {
+            return Evaluator.nativeBooleanToBooleanObject(node.value);
+        } else if (node instanceof PrefixExpression) {
+            return this.evaluatePrefixExpression(node, env);
+        } else if (node instanceof InfixExpression) {
+            return this.evaluateInfixExpression(node, env);
+        } else if (node instanceof IfExpression) {
+            return this.evaluateIfExpresion(node, env);
+        } else if (node instanceof Return) {
+            return this.evaluateReturnStatement(node, env);
+        } else if (node instanceof Let) {
+            return this.evaluateLetStatement(node, env);
+        } else if (node instanceof Identifier) {
+            return this.evaluateIdentifier(node, env);
+        } else if (node instanceof FunctionLiteral) {
+            return this.evaluateFunction(node, env);
+        } else if (node instanceof CallExpression) {
+            return this.evaluateFunctionCall(node, env);
         }
-        result.push(evaluated);
+
+        return Evaluator.getUnrecognizedStatementError(node);
     }
 
-    return result;
-}
+    evaluateFunctionCall(
+        callExpr: CallExpression,
+        env: ProgramEnvironment
+    ): IObject {
+        // func: IExpression; // this can be either an Identifier or Function
+        // args: IExpression[];
 
-function evaluateFunction(
-    fn: FunctionLiteral,
-    env: ProgramEnvironment
-): IObject {
-    // console.log('eval function: ', fn);
-    return new FunctionObject(fn.parameters, fn.body, env);
-}
+        let fn = this.evaluate(callExpr.func, env);
+        if (fn instanceof ErrorObj) {
+            return fn;
+        }
 
-function evaluateIdentifier(
-    ident: Identifier,
-    env: ProgramEnvironment
-): IObject {
-    const value = env.get(ident.name);
-    return value ? value : new ErrorObj(`identifier not found: ${ident.name}`);
-}
+        const args = this.evaluateExpressions(callExpr.args, env);
+        if (args.length === 1 && args[0] instanceof ErrorObj) {
+            return args[0];
+        }
 
-function evaluateLetStatement(stmt: Let, env: ProgramEnvironment): IObject {
-    const value = evaluate(stmt.expr, env);
-    if (value instanceof ErrorObj) {
-        return value;
+        return this.applyFunction(fn, args);
     }
 
-    env.set(stmt.ident.name, value);
-    return NULL;
-}
+    applyFunction(fn: IObject, args: IObject[]): IObject {
+        if (!(fn instanceof FunctionObject)) {
+            return new ErrorObj(`not a function: ${fn.getType()}`);
+        }
 
-function evaluateReturnStatement(
-    stmt: Return,
-    env: ProgramEnvironment
-): IObject {
-    const obj = evaluate(stmt.expr, env);
-    if (obj instanceof ErrorObj) {
+        const env = this.extendFunctionEnvironment(fn, args);
+        const evaluated = this.evaluateStatements(fn.body.stmts, env);
+        return this.unwrapReturnValue(evaluated);
+    }
+
+    extendFunctionEnvironment(
+        fn: FunctionObject,
+        args: IObject[]
+    ): ProgramEnvironment {
+        const env = createEnclosedEnvironment(fn.env);
+
+        fn.params.forEach((param, i) => {
+            env.set(param.name, args[i]);
+        });
+
+        return env;
+    }
+
+    unwrapReturnValue(obj: IObject): IObject {
+        if (obj instanceof ReturnObj) {
+            return obj.value;
+        }
+
         return obj;
     }
-    return new ReturnObj(obj);
-}
 
-function evaluateIfExpresion(
-    expr: IfExpression,
-    env: ProgramEnvironment
-): IObject {
-    const conditionObj = evaluate(expr.condition, env);
-    if (conditionObj instanceof ErrorObj) {
-        return conditionObj;
+    evaluateExpressions(
+        expressions: IExpression[],
+        env: ProgramEnvironment
+    ): IObject[] {
+        const result: IObject[] = [];
+
+        for (const expr of expressions) {
+            const evaluated = this.evaluate(expr, env);
+            if (evaluated instanceof ErrorObj) {
+                return [evaluated];
+            }
+            result.push(evaluated);
+        }
+
+        return result;
     }
 
-    if (isTruthy(conditionObj)) {
-        return evaluateStatements(expr.consequence.stmts, env);
-    } else if (expr.alternative) {
-        return evaluateStatements(expr.alternative.stmts, env);
+    evaluateFunction(fn: FunctionLiteral, env: ProgramEnvironment): IObject {
+        return new FunctionObject(fn.parameters, fn.body, env);
     }
 
-    return NULL;
-}
-
-function evaluateInfixExpression(
-    expr: InfixExpression,
-    env: ProgramEnvironment
-): IObject {
-    const left = evaluate(expr.left, env);
-    if (left instanceof ErrorObj) {
-        return left;
+    evaluateIdentifier(ident: Identifier, env: ProgramEnvironment): IObject {
+        const value = env.get(ident.name);
+        return value
+            ? value
+            : new ErrorObj(`identifier not found: ${ident.name}`);
     }
 
-    const right = evaluate(expr.right, env);
-    if (right instanceof ErrorObj) {
-        return right;
+    evaluateLetStatement(stmt: Let, env: ProgramEnvironment): IObject {
+        const value = this.evaluate(stmt.expr, env);
+        if (value instanceof ErrorObj) {
+            return value;
+        }
+
+        env.set(stmt.ident.name, value);
+        return NULL;
     }
 
-    // Here we are checking whether the types are compatible.
-    // Right now there are only 2 types - bool & int - which
-    // cannot be mixed.
-    if (
-        !(
+    evaluateReturnStatement(stmt: Return, env: ProgramEnvironment): IObject {
+        const obj = this.evaluate(stmt.expr, env);
+        if (obj instanceof ErrorObj) {
+            return obj;
+        }
+        return new ReturnObj(obj);
+    }
+
+    evaluateIfExpresion(expr: IfExpression, env: ProgramEnvironment): IObject {
+        const conditionObj = this.evaluate(expr.condition, env);
+        if (conditionObj instanceof ErrorObj) {
+            return conditionObj;
+        }
+
+        if (Evaluator.isTruthy(conditionObj)) {
+            return this.evaluateStatements(expr.consequence.stmts, env);
+        } else if (expr.alternative) {
+            return this.evaluateStatements(expr.alternative.stmts, env);
+        }
+
+        return NULL;
+    }
+
+    evaluateInfixExpression(
+        expr: InfixExpression,
+        env: ProgramEnvironment
+    ): IObject {
+        const left = this.evaluate(expr.left, env);
+        if (left instanceof ErrorObj) {
+            return left;
+        }
+
+        const right = this.evaluate(expr.right, env);
+        if (right instanceof ErrorObj) {
+            return right;
+        }
+
+        // Here we are checking whether the types are compatible.
+        // Right now there are only 2 types - bool & int - which
+        // cannot be mixed.
+        if (
+            !(
+                (left instanceof IntObj && right instanceof IntObj) ||
+                (left instanceof BooleanObj && right instanceof BooleanObj)
+            )
+        ) {
+            return Evaluator.getIncompatibleTypesError(
+                left,
+                expr.operator,
+                right
+            );
+        } else {
+            switch (expr.operator) {
+                case '+':
+                    return this.evaluateInfixPlus(left, right, expr.operator);
+                case '-':
+                    return this.evaluateInfixMinus(left, right, expr.operator);
+                case '*':
+                    return this.evaluateInfixAsterisk(
+                        left,
+                        right,
+                        expr.operator
+                    );
+                case '/':
+                    return this.evaluateInfixSlash(left, right, expr.operator);
+                case '%':
+                    return this.evaluateInfixReminder(
+                        left,
+                        right,
+                        expr.operator
+                    );
+                case '||':
+                    return this.evaluateInfixOr(left, right, expr.operator);
+                case '&&':
+                    return this.evaluateInfixAnd(left, right, expr.operator);
+                case '>':
+                    return this.evaluateInfixGreaterThan(
+                        left,
+                        right,
+                        expr.operator
+                    );
+                case '>=':
+                    return this.evaluateInfixGreaterThanOrEqual(
+                        left,
+                        right,
+                        expr.operator
+                    );
+                case '<':
+                    return this.evaluateInfixLessThan(
+                        left,
+                        right,
+                        expr.operator
+                    );
+                case '<=':
+                    return this.evaluateInfixLessThanOrEqual(
+                        left,
+                        right,
+                        expr.operator
+                    );
+                case '==':
+                    return this.evaluateInfixEqual(left, right, expr.operator);
+                case '!=':
+                    return this.evaluateInfixNotEqual(
+                        left,
+                        right,
+                        expr.operator
+                    );
+                default:
+                    return Evaluator.getUnknownInfixOperatorError(
+                        left,
+                        expr.operator,
+                        right
+                    );
+            }
+        }
+    }
+
+    evaluateInfixNotEqual(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (
             (left instanceof IntObj && right instanceof IntObj) ||
             (left instanceof BooleanObj && right instanceof BooleanObj)
-        )
-    ) {
-        return getIncompatibleTypesError(left, expr.operator, right);
-    } else {
+        ) {
+            return Evaluator.nativeBooleanToBooleanObject(
+                left.value != right.value
+            );
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixEqual(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (
+            (left instanceof IntObj && right instanceof IntObj) ||
+            (left instanceof BooleanObj && right instanceof BooleanObj)
+        ) {
+            return Evaluator.nativeBooleanToBooleanObject(
+                left.value == right.value
+            );
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixLessThanOrEqual(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (left instanceof IntObj && right instanceof IntObj) {
+            return Evaluator.nativeBooleanToBooleanObject(
+                left.value <= right.value
+            );
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixLessThan(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (left instanceof IntObj && right instanceof IntObj) {
+            return Evaluator.nativeBooleanToBooleanObject(
+                left.value < right.value
+            );
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixGreaterThanOrEqual(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (left instanceof IntObj && right instanceof IntObj) {
+            return Evaluator.nativeBooleanToBooleanObject(
+                left.value >= right.value
+            );
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixGreaterThan(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (left instanceof IntObj && right instanceof IntObj) {
+            return Evaluator.nativeBooleanToBooleanObject(
+                left.value > right.value
+            );
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixOr(left: IObject, right: IObject, operator: string): IObject {
+        if (left instanceof BooleanObj && right instanceof BooleanObj) {
+            return Evaluator.nativeBooleanToBooleanObject(
+                left.value || right.value
+            );
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixAnd(left: IObject, right: IObject, operator: string): IObject {
+        if (left instanceof BooleanObj && right instanceof BooleanObj) {
+            return Evaluator.nativeBooleanToBooleanObject(
+                left.value && right.value
+            );
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixPlus(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (left instanceof IntObj && right instanceof IntObj) {
+            return new IntObj(left.value + right.value);
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixMinus(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (left instanceof IntObj && right instanceof IntObj) {
+            return new IntObj(left.value - right.value);
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixAsterisk(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (left instanceof IntObj && right instanceof IntObj) {
+            return new IntObj(left.value * right.value);
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixSlash(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (left instanceof IntObj && right instanceof IntObj) {
+            return new IntObj(left.value / right.value);
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluateInfixReminder(
+        left: IObject,
+        right: IObject,
+        operator: string
+    ): IObject {
+        if (left instanceof IntObj && right instanceof IntObj) {
+            return new IntObj(left.value % right.value);
+        } else {
+            return Evaluator.getUnknownInfixOperatorError(
+                left,
+                operator,
+                right
+            );
+        }
+    }
+
+    evaluatePrefixExpression(
+        expr: PrefixExpression,
+        env: ProgramEnvironment
+    ): IObject {
+        const right = this.evaluate(expr.expr, env);
+        if (right instanceof ErrorObj) {
+            return right;
+        }
+
         switch (expr.operator) {
-            case '+':
-                return evaluateInfixPlus(left, right, expr.operator);
+            case '!':
+                if (right instanceof BooleanObj) {
+                    return right.value ? FALSE : TRUE;
+                } else if (right instanceof IntObj) {
+                    return right.value === 0 ? TRUE : FALSE;
+                } else {
+                    return Evaluator.getUnknownPrefixOperatorError(
+                        expr.operator,
+                        right
+                    );
+                }
             case '-':
-                return evaluateInfixMinus(left, right, expr.operator);
-            case '*':
-                return evaluateInfixAsterisk(left, right, expr.operator);
-            case '/':
-                return evaluateInfixSlash(left, right, expr.operator);
-            case '%':
-                return evaluateInfixReminder(left, right, expr.operator);
-            case '||':
-                return evaluateInfixOr(left, right, expr.operator);
-            case '&&':
-                return evaluateInfixAnd(left, right, expr.operator);
-            case '>':
-                return evaluateInfixGreaterThan(left, right, expr.operator);
-            case '>=':
-                return evaluateInfixGreaterThanOrEqual(
-                    left,
-                    right,
-                    expr.operator
-                );
-            case '<':
-                return evaluateInfixLessThan(left, right, expr.operator);
-            case '<=':
-                return evaluateInfixLessThanOrEqual(left, right, expr.operator);
-            case '==':
-                return evaluateInfixEqual(left, right, expr.operator);
-            case '!=':
-                return evaluateInfixNotEqual(left, right, expr.operator);
+                if (right instanceof IntObj) {
+                    return right.value === 0
+                        ? new IntObj(0)
+                        : new IntObj(-right.value);
+                } else {
+                    return Evaluator.getUnknownPrefixOperatorError(
+                        expr.operator,
+                        right
+                    );
+                }
             default:
-                return getUnknownInfixOperatorError(left, expr.operator, right);
+                return Evaluator.getUnknownPrefixOperatorError(
+                    expr.operator,
+                    right
+                );
         }
     }
-}
 
-function evaluateInfixNotEqual(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (
-        (left instanceof IntObj && right instanceof IntObj) ||
-        (left instanceof BooleanObj && right instanceof BooleanObj)
-    ) {
-        return nativeBooleanToBooleanObject(left.value != right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
+    evaluateProgram(stmts: IStatement[], env: ProgramEnvironment): IObject {
+        let result: IObject = NULL;
 
-function evaluateInfixEqual(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (
-        (left instanceof IntObj && right instanceof IntObj) ||
-        (left instanceof BooleanObj && right instanceof BooleanObj)
-    ) {
-        return nativeBooleanToBooleanObject(left.value == right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixLessThanOrEqual(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof IntObj && right instanceof IntObj) {
-        return nativeBooleanToBooleanObject(left.value <= right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixLessThan(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof IntObj && right instanceof IntObj) {
-        return nativeBooleanToBooleanObject(left.value < right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixGreaterThanOrEqual(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof IntObj && right instanceof IntObj) {
-        return nativeBooleanToBooleanObject(left.value >= right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixGreaterThan(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof IntObj && right instanceof IntObj) {
-        return nativeBooleanToBooleanObject(left.value > right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixOr(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof BooleanObj && right instanceof BooleanObj) {
-        return nativeBooleanToBooleanObject(left.value || right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixAnd(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof BooleanObj && right instanceof BooleanObj) {
-        return nativeBooleanToBooleanObject(left.value && right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixPlus(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof IntObj && right instanceof IntObj) {
-        return new IntObj(left.value + right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixMinus(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof IntObj && right instanceof IntObj) {
-        return new IntObj(left.value - right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixAsterisk(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof IntObj && right instanceof IntObj) {
-        return new IntObj(left.value * right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixSlash(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof IntObj && right instanceof IntObj) {
-        return new IntObj(left.value / right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluateInfixReminder(
-    left: IObject,
-    right: IObject,
-    operator: string
-): IObject {
-    if (left instanceof IntObj && right instanceof IntObj) {
-        return new IntObj(left.value % right.value);
-    } else {
-        return getUnknownInfixOperatorError(left, operator, right);
-    }
-}
-
-function evaluatePrefixExpression(
-    expr: PrefixExpression,
-    env: ProgramEnvironment
-): IObject {
-    const right = evaluate(expr.expr, env);
-    if (right instanceof ErrorObj) {
-        return right;
-    }
-
-    switch (expr.operator) {
-        case '!':
-            if (right instanceof BooleanObj) {
-                return right.value ? FALSE : TRUE;
-            } else if (right instanceof IntObj) {
-                return right.value === 0 ? TRUE : FALSE;
-            } else {
-                return getUnknownPrefixOperatorError(expr.operator, right);
+        for (const stmt of stmts) {
+            result = this.evaluate(stmt, env);
+            if (result instanceof ReturnObj) {
+                return result.value;
             }
-        case '-':
-            if (right instanceof IntObj) {
-                return right.value === 0
-                    ? new IntObj(0)
-                    : new IntObj(-right.value);
-            } else {
-                return getUnknownPrefixOperatorError(expr.operator, right);
+            if (result instanceof ErrorObj) {
+                return result;
             }
-        default:
-            return getUnknownPrefixOperatorError(expr.operator, right);
-    }
-}
-
-function evaluateProgram(
-    stmts: IStatement[],
-    env: ProgramEnvironment
-): IObject {
-    let result: IObject = NULL;
-
-    for (const stmt of stmts) {
-        result = evaluate(stmt, env);
-        if (result instanceof ReturnObj) {
-            return result.value;
         }
-        if (result instanceof ErrorObj) {
-            return result;
+
+        return result;
+    }
+
+    evaluateStatements(stmts: IStatement[], env: ProgramEnvironment): IObject {
+        let result: IObject = NULL;
+
+        for (const stmt of stmts) {
+            result = this.evaluate(stmt, env);
+            if (result instanceof ReturnObj || result instanceof ErrorObj) {
+                return result;
+            }
         }
+
+        return result;
     }
 
-    return result;
-}
-
-function evaluateStatements(
-    stmts: IStatement[],
-    env: ProgramEnvironment
-): IObject {
-    let result: IObject = NULL;
-
-    for (const stmt of stmts) {
-        result = evaluate(stmt, env);
-        if (result instanceof ReturnObj || result instanceof ErrorObj) {
-            return result;
+    static nativeBooleanToBooleanObject(input: boolean): BooleanObj {
+        if (input) {
+            return TRUE;
         }
+        return FALSE;
     }
 
-    return result;
-}
-
-function nativeBooleanToBooleanObject(input: boolean): BooleanObj {
-    if (input) {
-        return TRUE;
+    static getIncompatibleTypesError(
+        left: IObject,
+        operator: string,
+        right: IObject
+    ): ErrorObj {
+        return new ErrorObj(
+            `type mismatch: ${left.getType()} ${operator} ${right.getType()}`
+        );
     }
-    return FALSE;
-}
 
-function getIncompatibleTypesError(
-    left: IObject,
-    operator: string,
-    right: IObject
-): ErrorObj {
-    return new ErrorObj(
-        `type mismatch: ${left.getType()} ${operator} ${right.getType()}`
-    );
-}
+    static getUnrecognizedStatementError(node: INode): ErrorObj {
+        return new ErrorObj(`unrecognized statement error ${node.toString()}`);
+    }
 
-function getUnrecognizedStatementError(node: INode): ErrorObj {
-    return new ErrorObj(`unrecognized statement error ${node.toString()}`);
-}
+    static getExpressionEvaluationFailedError(expr: IExpression): ErrorObj {
+        return new ErrorObj(
+            `failed to evaluate expression '${expr.toString()}'`
+        );
+    }
 
-function getExpressionEvaluationFailedError(expr: IExpression): ErrorObj {
-    return new ErrorObj(`failed to evaluate expression '${expr.toString()}'`);
-}
+    static getUnknownInfixOperatorError(
+        left: IObject,
+        operator: string,
+        right: IObject
+    ): ErrorObj {
+        return new ErrorObj(
+            `unknown operator: ${left.getType()} ${operator} ${right.getType()}`
+        );
+    }
 
-function getUnknownInfixOperatorError(
-    left: IObject,
-    operator: string,
-    right: IObject
-): ErrorObj {
-    return new ErrorObj(
-        `unknown operator: ${left.getType()} ${operator} ${right.getType()}`
-    );
-}
+    static getUnknownPrefixOperatorError(
+        operator: string,
+        right: IObject
+    ): ErrorObj {
+        return new ErrorObj(`unknown operator: ${operator}${right.getType()}`);
+    }
 
-function getUnknownPrefixOperatorError(
-    operator: string,
-    right: IObject
-): ErrorObj {
-    return new ErrorObj(`unknown operator: ${operator}${right.getType()}`);
-}
-
-function isTruthy(obj: IObject): boolean {
-    switch (obj) {
-        case TRUE:
-            return true;
-        case FALSE:
-            return false;
-        case NULL:
-            return false;
-        default:
-            return true;
+    static isTruthy(obj: IObject): boolean {
+        switch (obj) {
+            case TRUE:
+                return true;
+            case FALSE:
+                return false;
+            case NULL:
+                return false;
+            default:
+                return true;
+        }
     }
 }
