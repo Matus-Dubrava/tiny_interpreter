@@ -23,8 +23,12 @@ import {
     Return,
     Identifier,
     FunctionLiteral,
+    CallExpression,
 } from '../ast';
-import { ProgramEnvironment } from '../object/environment';
+import {
+    ProgramEnvironment,
+    createEnclosedEnvironment,
+} from '../object/environment';
 
 const TRUE = new BooleanObj(true);
 const FALSE = new BooleanObj(false);
@@ -55,9 +59,81 @@ export function evaluate(node: INode, env: ProgramEnvironment): IObject {
         return evaluateIdentifier(node, env);
     } else if (node instanceof FunctionLiteral) {
         return evaluateFunction(node, env);
+    } else if (node instanceof CallExpression) {
+        return evaluateFunctionCall(node, env);
     }
 
     return getUnrecognizedStatementError(node);
+}
+
+function evaluateFunctionCall(
+    callExpr: CallExpression,
+    env: ProgramEnvironment
+): IObject {
+    // func: IExpression; // this can be either an Identifier or Function
+    // args: IExpression[];
+
+    let fn = evaluate(callExpr.func, env);
+    if (fn instanceof ErrorObj) {
+        return fn;
+    }
+
+    const args = evaluateExpressions(callExpr.args, env);
+    if (args.length === 1 && args[0] instanceof ErrorObj) {
+        return args[0];
+    }
+
+    // ... implement applying arugments to function body
+    // be creating new inner function environment
+    return applyFunction(fn, args);
+}
+
+function applyFunction(fn: IObject, args: IObject[]): IObject {
+    if (!(fn instanceof FunctionObject)) {
+        return new ErrorObj(`not a function: ${fn.getType()}`);
+    }
+
+    const env = extendFunctionEnvironment(fn, args);
+    const evaluated = evaluateStatements(fn.body.stmts, env);
+    return unwrapReturnValue(evaluated);
+}
+
+function extendFunctionEnvironment(
+    fn: FunctionObject,
+    args: IObject[]
+): ProgramEnvironment {
+    const env = createEnclosedEnvironment(fn.env);
+
+    fn.params.forEach((param, i) => {
+        env.set(param.name, args[i]);
+    });
+
+    return env;
+}
+
+function unwrapReturnValue(obj: IObject): IObject {
+    if (obj instanceof ReturnObj) {
+        return obj.value;
+    }
+
+    return obj;
+}
+
+function evaluateExpressions(
+    expressions: IExpression[],
+    env: ProgramEnvironment
+): IObject[] {
+    const result: IObject[] = [];
+
+    for (const expr of expressions) {
+        const evaluated = evaluate(expr, env);
+        if (evaluated instanceof ErrorObj) {
+            return [evaluated];
+        }
+        result.push(evaluated);
+    }
+
+    return result;
 }
 
 function evaluateFunction(

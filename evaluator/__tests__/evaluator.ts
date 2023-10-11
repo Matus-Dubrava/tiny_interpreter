@@ -65,6 +65,29 @@ test('test evaluate function expression', () => {
     expect(fn.body.toString()).toEqual('(x + 2)');
 });
 
+test('test function application', () => {
+    const tests = [
+        { input: 'let identity = fn(x) { x; }; identity(5);', expected: 5 },
+        {
+            input: 'let identity = fn(x) { return x; }; identity(5);',
+            expected: 5,
+        },
+        { input: 'let double = fn(x) { x * 2; }; double(5);', expected: 10 },
+        { input: 'let add = fn(x, y) { x + y; }; add(5, 5);', expected: 10 },
+        {
+            input: 'let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));',
+            expected: 20,
+        },
+        { input: 'fn(x) { x; }(5)', expected: 5 },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+        const evaluated = testEval(input);
+        expect(evaluated).not.toBeNull();
+        testIntegerObject(evaluated!, expected);
+    });
+});
+
 test('test evaluate let statement', () => {
     const tests = [
         { input: 'let a = 5; a;', expected: 5 },
