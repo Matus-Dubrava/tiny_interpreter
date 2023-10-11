@@ -247,7 +247,7 @@ export class Lexer {
 
     readIdentifier(): string {
         let ident: string = '';
-        while (isLetter(this.ch)) {
+        while (isLetter(this.ch) || isNumber(this.ch)) {
             ident += this.ch;
             this.readChar();
         }

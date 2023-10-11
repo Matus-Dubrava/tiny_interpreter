@@ -166,3 +166,35 @@ test('lexer with another input', () => {
         expect(lex.nextToken()).toEqual(token);
     }
 });
+
+test('test lexer identifiers', () => {
+    const input = `
+        x;
+        xy_;
+        __add__;
+        __ADD_x;
+        add2;
+        add1AND2;
+    `;
+    const tokens = [
+        { type: TokenType.Ident, literal: 'x' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.Ident, literal: 'xy_' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.Ident, literal: '__add__' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.Ident, literal: '__ADD_x' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.Ident, literal: 'add2' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.Ident, literal: 'add1AND2' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.EOF, literal: '' },
+    ];
+
+    const lex = new Lexer(input);
+
+    for (const token of tokens) {
+        expect(lex.nextToken()).toEqual(token);
+    }
+});
