@@ -82,28 +82,58 @@ test('test array literals', () => {
 
 test('test builtin functions', () => {
     const tests = [
-        { input: `len("")`, expected: 0 },
-        { input: `len("four")`, expected: 4 },
-        { input: `len("hello world")`, expected: 11 },
+        { input: `len("")`, expected: 0, isError: false },
+        { input: `len("four")`, expected: 4, isError: false },
+        { input: `len("hello world")`, expected: 11, isError: false },
         {
             input: `len(1)`,
             expected: `argument to 'len' not supported, got INTEGER`,
+            isError: true,
         },
         {
             input: `len("one", "two")`,
             expected: 'wrong number of arguments. got=2, expected=1',
+            isError: true,
+        },
+        { input: `len([])`, expected: 0, isError: false },
+        { input: `len([1,2,3])`, expected: 3, isError: false },
+        {
+            input: `
+            len([
+                if (true) {1} else {2},
+                true,
+                "something",
+                1 + 2
+            ])`,
+            expected: 4,
+            isError: false,
+        },
+        // first
+        { input: `first([])`, expected: null, isError: false },
+        { input: `first([1,2])`, expected: 1, isError: false },
+        { input: `first("")`, expected: '', isError: false },
+        { input: `first("hello")`, expected: 'h', isError: false },
+        {
+            input: `first("one", "two", 3)`,
+            expected: 'wrong number of arguments. got=3, expected=1',
+            isError: true,
         },
     ];
 
-    tests.forEach(({ input, expected }) => {
+    tests.forEach(({ input, expected, isError }) => {
         const evaluated = testEval(input);
 
-        if (typeof expected === 'number') {
+        if (isError) {
+            expect(evaluated).toBeInstanceOf(ErrorObj);
+            expect((evaluated as ErrorObj).value).toEqual(expected);
+        } else if (typeof expected === 'number') {
             expect(evaluated).toBeInstanceOf(IntObj);
             testIntegerObject(evaluated as IntObj, Number(expected));
         } else if (typeof expected === 'string') {
-            expect(evaluated).toBeInstanceOf(ErrorObj);
-            expect((evaluated as ErrorObj).value).toEqual(expected);
+            expect(evaluated).toBeInstanceOf(StringObj);
+            expect((evaluated as StringObj).value).toEqual(expected);
+        } else if (!expected) {
+            expect(evaluated).toBeInstanceOf(NullObj);
         }
     });
 });
