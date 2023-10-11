@@ -165,6 +165,21 @@ test('test parse call expression', () => {
     testInfixExpression(callExpr.args[2], 4, '+', 5);
 });
 
+test('test parse call expression without arguments', () => {
+    const input = 'add()';
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+
+    expect(program.stmts.length).toEqual(1);
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(CallExpression);
+    const callExpr = expr as CallExpression;
+    expect(callExpr.args.length).toEqual(0);
+});
+
 test('test parse call expression with function literal', () => {
     const input = 'fn(x){x + 1}(1);';
 

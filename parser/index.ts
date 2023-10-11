@@ -439,7 +439,7 @@ export class Parser {
         const curTok = this.curTok;
         const args: IExpression[] = [];
 
-        while (this.curTok.type !== TokenType.RParen) {
+        while (this.peekTok.type !== TokenType.RParen) {
             this.nextToken();
             const expr = this.parseExpression(Precedence.LOWEST);
             if (!expr) {
@@ -448,17 +448,22 @@ export class Parser {
 
             args.push(expr);
 
-            this.nextToken();
             if (
-                this.curTok.type !== TokenType.RParen &&
-                this.curTok.type !== TokenType.Comma
+                this.peekTok.type !== TokenType.RParen &&
+                this.peekTok.type !== TokenType.Comma
             ) {
                 this.errors.push(
                     `Error while parsing call expression. Expected ',' or ')', got='${this.curTok.type}'`
                 );
                 return null;
             }
+
+            if (this.peekTok.type === TokenType.Comma) {
+                this.nextToken();
+            }
         }
+
+        this.nextToken();
 
         return new CallExpression(curTok, left, args);
     }
