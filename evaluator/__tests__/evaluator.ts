@@ -118,6 +118,31 @@ test('test builtin functions', () => {
             expected: 'wrong number of arguments. got=3, expected=1',
             isError: true,
         },
+        {
+            input: `first()`,
+            expected: 'wrong number of arguments. got=0, expected=1',
+            isError: true,
+        },
+        // last
+        { input: `last([])`, expected: null, isError: false },
+        { input: `last([1,2])`, expected: 2, isError: false },
+        { input: `last("")`, expected: '', isError: false },
+        { input: `last("hello")`, expected: 'o', isError: false },
+        {
+            input: `last("one", "two", 3)`,
+            expected: 'wrong number of arguments. got=3, expected=1',
+            isError: true,
+        },
+        {
+            input: `last()`,
+            expected: 'wrong number of arguments. got=0, expected=1',
+            isError: true,
+        },
+        {
+            input: `last(1)`,
+            expected: `argument to 'last' not supported, got INTEGER`,
+            isError: true,
+        },
     ];
 
     tests.forEach(({ input, expected, isError }) => {

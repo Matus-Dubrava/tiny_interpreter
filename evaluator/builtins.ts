@@ -56,6 +56,37 @@ Builtins.set(
     })
 );
 
+Builtins.set(
+    'last',
+    new BuiltinObj((...args: IObject[]): IObject => {
+        if (args.length !== 1) {
+            return getWrongNumberOfArgumentsError(args.length, 1);
+        }
+
+        if (args[0] instanceof StringObj) {
+            return args[0].value.length > 0
+                ? new StringObj(
+                      (args[0] as StringObj).value[
+                          (args[0] as StringObj).value.length - 1
+                      ]
+                  )
+                : new StringObj('');
+        }
+
+        if (args[0] instanceof ArrayObj) {
+            return args[0].elements.length > 0
+                ? (args[0] as ArrayObj).elements[
+                      (args[0] as ArrayObj).elements.length - 1
+                  ]
+                : NULL;
+        }
+
+        return new ErrorObj(
+            `argument to 'last' not supported, got ${args[0].getType()}`
+        );
+    })
+);
+
 function getWrongNumberOfArgumentsError(
     received: number,
     expected: number
