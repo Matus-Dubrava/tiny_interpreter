@@ -143,6 +143,28 @@ test('test builtin functions', () => {
             expected: `argument to 'last' not supported, got INTEGER`,
             isError: true,
         },
+        // tail
+        { input: `tail([])`, expected: [], isError: false },
+        { input: `tail([1])`, expected: [], isError: false },
+        { input: `tail([1,2])`, expected: [2], isError: false },
+        { input: `tail("")`, expected: '', isError: false },
+        { input: `tail("a")`, expected: '', isError: false },
+        { input: `tail("hello")`, expected: 'ello', isError: false },
+        {
+            input: `tail("one", "two", 3)`,
+            expected: 'wrong number of arguments. got=3, expected=1',
+            isError: true,
+        },
+        {
+            input: `tail()`,
+            expected: 'wrong number of arguments. got=0, expected=1',
+            isError: true,
+        },
+        {
+            input: `tail(1)`,
+            expected: `argument to 'tail' not supported, got INTEGER`,
+            isError: true,
+        },
     ];
 
     tests.forEach(({ input, expected, isError }) => {
@@ -152,11 +174,17 @@ test('test builtin functions', () => {
             expect(evaluated).toBeInstanceOf(ErrorObj);
             expect((evaluated as ErrorObj).value).toEqual(expected);
         } else if (typeof expected === 'number') {
-            expect(evaluated).toBeInstanceOf(IntObj);
-            testIntegerObject(evaluated as IntObj, Number(expected));
+            expect(evaluated).not.toBeNull();
+            testIntegerObject(evaluated!, expected);
         } else if (typeof expected === 'string') {
             expect(evaluated).toBeInstanceOf(StringObj);
             expect((evaluated as StringObj).value).toEqual(expected);
+        } else if (Array.isArray(expected)) {
+            expect(evaluated).toBeInstanceOf(ArrayObj);
+            const array = evaluated as ArrayObj;
+            expected.forEach((num, i) => {
+                testIntegerObject(array.elements[i], num);
+            });
         } else if (!expected) {
             expect(evaluated).toBeInstanceOf(NullObj);
         }

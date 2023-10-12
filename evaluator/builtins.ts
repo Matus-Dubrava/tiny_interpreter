@@ -87,6 +87,41 @@ Builtins.set(
     })
 );
 
+Builtins.set(
+    'tail',
+    new BuiltinObj((...args: IObject[]): IObject => {
+        if (args.length !== 1) {
+            return getWrongNumberOfArgumentsError(args.length, 1);
+        }
+
+        if (args[0] instanceof StringObj) {
+            return args[0].value.length > 0
+                ? new StringObj(
+                      (args[0] as StringObj).value.substring(
+                          1,
+                          (args[0] as StringObj).value.length
+                      )
+                  )
+                : new StringObj('');
+        }
+
+        if (args[0] instanceof ArrayObj) {
+            return args[0].elements.length > 0
+                ? new ArrayObj(
+                      (args[0] as ArrayObj).elements.slice(
+                          1,
+                          (args[0] as ArrayObj).elements.length
+                      )
+                  )
+                : new ArrayObj([]);
+        }
+
+        return new ErrorObj(
+            `argument to 'tail' not supported, got ${args[0].getType()}`
+        );
+    })
+);
+
 function getWrongNumberOfArgumentsError(
     received: number,
     expected: number
