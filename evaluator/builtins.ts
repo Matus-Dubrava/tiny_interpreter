@@ -122,6 +122,25 @@ Builtins.set(
     })
 );
 
+Builtins.set(
+    'push',
+    new BuiltinObj((...args: IObject[]): IObject => {
+        if (args.length !== 2) {
+            return getWrongNumberOfArgumentsError(args.length, 2);
+        }
+
+        if (args[0] instanceof ArrayObj) {
+            const arr = (args[0] as ArrayObj).elements;
+            arr.push(args[1]);
+            return new ArrayObj(arr);
+        }
+
+        return new ErrorObj(
+            `argument to 'push' not supported, got ${args[0].getType()}`
+        );
+    })
+);
+
 function getWrongNumberOfArgumentsError(
     received: number,
     expected: number

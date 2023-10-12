@@ -165,6 +165,25 @@ test('test builtin functions', () => {
             expected: `argument to 'tail' not supported, got INTEGER`,
             isError: true,
         },
+        // push
+        { input: `push([], 1)`, expected: [1], isError: false },
+        { input: `push([1], 2)`, expected: [1, 2], isError: false },
+        { input: `push([1, 2], 3)`, expected: [1, 2, 3], isError: false },
+        {
+            input: `push("one", "two", 3)`,
+            expected: 'wrong number of arguments. got=3, expected=2',
+            isError: true,
+        },
+        {
+            input: `push()`,
+            expected: 'wrong number of arguments. got=0, expected=2',
+            isError: true,
+        },
+        {
+            input: `push("some", 1)`,
+            expected: `argument to 'push' not supported, got STRING`,
+            isError: true,
+        },
     ];
 
     tests.forEach(({ input, expected, isError }) => {
