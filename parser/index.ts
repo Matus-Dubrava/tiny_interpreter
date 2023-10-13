@@ -18,6 +18,7 @@ import {
     StringLiteral,
     ArrayLiteral,
     IndexExpression,
+    ImportStatement,
 } from '../ast';
 
 type PrefixParseFn = () => IExpression | null;
@@ -205,9 +206,18 @@ export class Parser {
                 return this.parseReturnStatement();
             case TokenType.Let:
                 return this.parseLetStatement();
+            case TokenType.Import:
+                return this.parseImportStatement();
             default:
                 return this.parseExpressionStatement();
         }
+    }
+
+    parseImportStatement(): IStatement | null {
+        const curTok = this.curTok;
+        this.expectPeekTokenToBeAndAdvance(TokenType.String);
+        const fileName = this.parseStringLiteral();
+        return new ImportStatement(curTok, fileName);
     }
 
     parseExpressionStatement(): IStatement | null {

@@ -16,6 +16,7 @@ import {
     StringLiteral,
     ArrayLiteral,
     IndexExpression,
+    ImportStatement,
 } from '../../ast';
 import { Parser } from '../index';
 
@@ -516,6 +517,44 @@ test('test parse return statement', () => {
     expect((program.stmts[0] as Return).token.type).toEqual(TokenType.Return);
 });
 
+test('test parse simple import statement', () => {
+    const input = `import "../somefile.tn"`;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(1);
+    expect(program.stmts[0]).toBeInstanceOf(ImportStatement);
+    const importStmt = program.stmts[0] as ImportStatement;
+    testStringLiteral(importStmt.fileName, '../somefile.tn');
+});
+
+test('test parse import statements', () => {
+    const input = `
+        import "../somefile.tn"
+        import "utils.tn"
+        
+        return 1;
+    `;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(3);
+
+    expect(program.stmts[0]).toBeInstanceOf(ImportStatement);
+    const importStmt1 = program.stmts[0] as ImportStatement;
+    testStringLiteral(importStmt1.fileName, '../somefile.tn');
+
+    expect(program.stmts[1]).toBeInstanceOf(ImportStatement);
+    const importStmt2 = program.stmts[1] as ImportStatement;
+    testStringLiteral(importStmt2.fileName, 'utils.tn');
+
+    expect(program.stmts[2]).toBeInstanceOf(Return);
+});
+
 test('test parse integer literal', () => {
     const tests = [
         { input: '5;', expectedValue: 5 },
@@ -637,4 +676,9 @@ function testPrefixExpression(expr: IExpression, operator: string, right: any) {
     const prefixExpr = expr as PrefixExpression;
     expect(prefixExpr.operator).toEqual(operator);
     testLiteralExpression(prefixExpr.expr, right);
+}
+
+function testStringLiteral(expr: IExpression, str: string) {
+    expect(expr).toBeInstanceOf(StringLiteral);
+    expect((expr as StringLiteral).value).toEqual(str);
 }

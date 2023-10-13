@@ -229,6 +229,22 @@ test('test lexer identifiers', () => {
     }
 });
 
+test('test lexer import statement', () => {
+    const input = `import "../somefile.tn"`;
+
+    const tokens = [
+        { type: TokenType.Import, literal: 'import' },
+        { type: TokenType.String, literal: `../somefile.tn` },
+        { type: TokenType.EOF, literal: `` },
+    ];
+
+    const lexer = new Lexer(input);
+
+    for (const token of tokens) {
+        expect(lexer.nextToken()).toEqual(token);
+    }
+});
+
 test('test lexer identifiers', () => {
     const input = `
         let f = fn(x) { if (true) { return x; } else { return x; }};

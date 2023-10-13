@@ -95,6 +95,26 @@ export class Let implements IStatement {
     }
 }
 
+export class ImportStatement implements IStatement {
+    token: Token;
+    fileName: StringLiteral;
+
+    constructor(token: Token, fileName: StringLiteral) {
+        this.token = token;
+        this.fileName = fileName;
+    }
+
+    statementNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `import ${this.fileName}`;
+    }
+}
+
 export class Identifier implements IExpression {
     token: Token;
     name: string;
