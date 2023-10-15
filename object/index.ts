@@ -11,6 +11,7 @@ export const ObjectType = {
     STRING_OBJ: 'STRING',
     BUILTIN_OBJ: 'BUILTIN',
     ARRAY_OBJ: 'ARRAY',
+    HASH_OBJ: 'HASH',
 } as const;
 
 export type ObjectType = (typeof ObjectType)[keyof typeof ObjectType];
@@ -21,7 +22,56 @@ export interface IObject {
     toString(): string;
 }
 
-export class IntObj implements IObject {
+export class HashKey {
+    type: IObject;
+    value: string;
+
+    constructor(type: IObject, value: string) {
+        this.type = type;
+        this.value = value;
+    }
+
+    static getHashKey(obj: IObject): HashKey {
+        if ('getHash' in obj) {
+            return new HashKey(obj, (obj as any).getHash() as string);
+        } else {
+            throw Error(`unhashable type: ${obj.getType()}`);
+        }
+    }
+}
+
+export interface IHashable {
+    getHash(): string;
+}
+
+export type HashPair = {
+    key: IObject;
+    value: IObject;
+};
+
+export class HashObj implements IObject {
+    pairs: Map<HashKey, HashPair>;
+
+    constructor(pairs: Map<HashKey, HashPair>) {
+        this.pairs = pairs;
+    }
+
+    getType(): ObjectType {
+        return ObjectType.HASH_OBJ;
+    }
+
+    toString(): string {
+        const res: string[] = [];
+
+        for (const [key, value] of this.pairs) {
+            res.push(`${value.key.toString()}: ${value.value.toString()}`);
+        }
+
+        return `{${res.join(', ')}}`;
+    }
+}
+
+export class IntObj implements IObject, IHashable {
     value: number;
 
     constructor(value: number) {
@@ -35,9 +85,13 @@ export class IntObj implements IObject {
     toString(): string {
         return `${this.value}`;
     }
+
+    getHash(): string {
+        return this.value.toString();
+    }
 }
 
-export class StringObj implements IObject {
+export class StringObj implements IObject, IHashable {
     value: string;
 
     constructor(value: string) {
@@ -51,9 +105,13 @@ export class StringObj implements IObject {
     toString(): string {
         return this.value;
     }
+
+    getHash(): string {
+        return this.value;
+    }
 }
 
-export class BooleanObj implements IObject {
+export class BooleanObj implements IObject, IHashable {
     value: boolean;
 
     constructor(value: boolean) {
@@ -66,6 +124,10 @@ export class BooleanObj implements IObject {
 
     toString(): string {
         return `${this.value}`;
+    }
+
+    getHash(): string {
+        return this.value.toString();
     }
 }
 
