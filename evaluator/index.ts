@@ -145,23 +145,39 @@ export class Evaluator {
         node: IndexExpression,
         env: ProgramEnvironment
     ): IObject {
-        const array = this.evaluate(node.left, env);
-        if (array instanceof ErrorObj) {
-            return array;
+        const arrayOrHash = this.evaluate(node.left, env);
+        if (arrayOrHash instanceof ErrorObj) {
+            return arrayOrHash;
         }
 
         const index = this.evaluate(node.index, env);
-        if (array instanceof ErrorObj) {
-            return array;
+        if (arrayOrHash instanceof ErrorObj) {
+            return arrayOrHash;
         }
 
-        if (!(array instanceof ArrayObj) || !(index instanceof IntObj)) {
+        if (arrayOrHash instanceof ArrayObj && index instanceof IntObj) {
+            return this.evaluateArrayIndexExpression(arrayOrHash, index);
+        } else if (arrayOrHash instanceof HashObj) {
+            return this.evaluateHashIndexExpression(arrayOrHash, index);
+        } else {
             return new ErrorObj(
-                `index operator not supported: ${array.getType()}`
+                `index operator not supported: ${arrayOrHash.getType()}`
             );
         }
+    }
 
-        return this.evaluateArrayIndexExpression(array, index);
+    evaluateHashIndexExpression(hash: HashObj, key: IObject): IObject {
+        if (!key.isHashable) {
+            return new ErrorObj(`received unhashable type: ${key.getType()}`);
+        }
+
+        const hashedKey = key.getHash();
+        const value = hash.pairs.get(hashedKey);
+        if (!value) {
+            return NULL;
+        } else {
+            return value.value;
+        }
     }
 
     evaluateArrayIndexExpression(array: ArrayObj, index: IntObj): IObject {

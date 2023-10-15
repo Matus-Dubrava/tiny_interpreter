@@ -51,6 +51,48 @@ test('test evaluate hash literal', () => {
     }
 });
 
+test('test hash index expression', () => {
+    const tests = [
+        {
+            input: `{"foo": 5}["foo"]`,
+            expected: 5,
+        },
+        {
+            input: `{"foo": 5}["bar"]`,
+            expected: null,
+        },
+        {
+            input: `let key = "foo"; {"foo": 5}[key]`,
+            expected: 5,
+        },
+        {
+            input: `{}["foo"]`,
+            expected: null,
+        },
+        {
+            input: `{5: 5}[5]`,
+            expected: 5,
+        },
+        {
+            input: `{true: 5}[true]`,
+            expected: 5,
+        },
+        {
+            input: `{false: 5}[false]`,
+            expected: 5,
+        },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+        const evaluated = testEval(input);
+        if (evaluated instanceof IntObj) {
+            testIntegerObject(evaluated, expected!);
+        } else {
+            testNullObject(evaluated!);
+        }
+    });
+});
+
 test('test import statement', () => {
     const input = `
         import "./example_programs/utils.tn"
