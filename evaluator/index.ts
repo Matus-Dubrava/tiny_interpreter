@@ -32,6 +32,7 @@ import {
     ArrayLiteral,
     IndexExpression,
     ImportStatement,
+    ExitStatement,
 } from '../ast';
 import {
     ProgramEnvironment,
@@ -78,9 +79,15 @@ export class Evaluator {
             return this.evaluateIndexExpression(node, env);
         } else if (node instanceof ImportStatement) {
             return this.evaluateImportStatement(node, env);
+        } else if (node instanceof ExitStatement) {
+            return this.evaluateExitStatement(node);
         }
 
         return Evaluator.getUnrecognizedStatementError(node);
+    }
+
+    evaluateExitStatement(node: ExitStatement): IObject {
+        process.exit(node.exitCode.value);
     }
 
     evaluateImportStatement(

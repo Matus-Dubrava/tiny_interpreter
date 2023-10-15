@@ -19,6 +19,7 @@ import {
     ArrayLiteral,
     IndexExpression,
     ImportStatement,
+    ExitStatement,
 } from '../ast';
 
 type PrefixParseFn = () => IExpression | null;
@@ -208,9 +209,18 @@ export class Parser {
                 return this.parseLetStatement();
             case TokenType.Import:
                 return this.parseImportStatement();
+            case TokenType.Exit:
+                return this.parseExitStatement();
             default:
                 return this.parseExpressionStatement();
         }
+    }
+
+    parseExitStatement(): IStatement | null {
+        const curTok = this.curTok;
+        this.expectPeekTokenToBeAndAdvance(TokenType.Int);
+        const exitCode = this.parseInt();
+        return new ExitStatement(curTok, exitCode as IntLiteral);
     }
 
     parseImportStatement(): IStatement | null {

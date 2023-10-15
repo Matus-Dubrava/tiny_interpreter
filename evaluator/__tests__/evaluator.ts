@@ -12,6 +12,7 @@ import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
 import { Evaluator } from '..';
 import { ProgramEnvironment } from '../../object/environment';
+import { exec } from 'child_process';
 
 test('test import statement', () => {
     const input = `
@@ -560,4 +561,17 @@ function testBooleanObject(obj: IObject, expected: boolean): void {
 function testIntegerObject(obj: IObject, expected: number): void {
     expect(obj).toBeInstanceOf(IntObj);
     expect((obj as IntObj).value).toEqual(expected);
+}
+
+function getProgramExitCode() {
+    return new Promise((resolve, reject) => {
+        exec('echo $?', (err, stdout) => {
+            if (err) {
+                reject(err);
+            } else {
+                const exitCode = parseInt(stdout);
+                resolve(exitCode);
+            }
+        });
+    });
 }

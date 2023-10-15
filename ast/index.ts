@@ -95,6 +95,26 @@ export class Let implements IStatement {
     }
 }
 
+export class ExitStatement implements IStatement {
+    token: Token;
+    exitCode: IntLiteral;
+
+    constructor(token: Token, exitCode: IntLiteral) {
+        this.token = token;
+        this.exitCode = exitCode;
+    }
+
+    statementNode(): void {}
+
+    toString(): string {
+        return `exit(${this.exitCode.toString()})`;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+}
+
 export class ImportStatement implements IStatement {
     token: Token;
     fileName: StringLiteral;

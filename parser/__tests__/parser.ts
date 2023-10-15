@@ -17,6 +17,7 @@ import {
     ArrayLiteral,
     IndexExpression,
     ImportStatement,
+    ExitStatement,
 } from '../../ast';
 import { Parser } from '../index';
 
@@ -528,6 +529,18 @@ test('test parse simple import statement', () => {
     expect(program.stmts[0]).toBeInstanceOf(ImportStatement);
     const importStmt = program.stmts[0] as ImportStatement;
     testStringLiteral(importStmt.fileName, '../somefile.tn');
+});
+
+test('test parse exit statement', () => {
+    const input = 'exit 100';
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(1);
+    expect(program.stmts[0]).toBeInstanceOf(ExitStatement);
+    testIntExpr((program.stmts[0] as ExitStatement).exitCode, 100);
 });
 
 test('test parse import statements', () => {

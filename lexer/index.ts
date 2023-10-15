@@ -2,6 +2,7 @@ export const TokenType = {
     Let: 'LET',
     Ident: 'INDENT',
     Import: 'IMPORT',
+    Exit: 'EXIT',
     Assign: '=',
     Int: 'INT',
     Plus: '+',
@@ -54,6 +55,7 @@ const Keywords = {
     if: createToken(TokenType.If, 'if'),
     else: createToken(TokenType.Else, 'else'),
     import: createToken(TokenType.Import, 'import'),
+    exit: createToken(TokenType.Exit, 'exit'),
 } as const;
 
 function isLetter(letter: string): boolean {
