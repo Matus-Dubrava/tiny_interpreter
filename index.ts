@@ -1,10 +1,10 @@
-import { repl } from './repl';
-import { Evaluator } from './evaluator';
-import { ProgramEnvironment } from './object/environment';
+import { repl } from './src/repl';
+import { Evaluator } from './src/evaluator';
+import { ProgramEnvironment } from './src/object/environment';
 import { readFileSync } from 'fs';
-import { Lexer } from './lexer';
-import { Parser } from './parser';
-import { ErrorObj } from './object';
+import { Lexer } from './src/lexer';
+import { Parser } from './src/parser';
+import { ErrorObj } from './src/object';
 
 const args = process.argv.slice(2);
 

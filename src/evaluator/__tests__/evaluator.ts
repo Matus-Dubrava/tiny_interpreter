@@ -129,7 +129,7 @@ test('test hash index expression', () => {
 
 test('test import statement', () => {
     const input = `
-        import "./evaluator/__tests__/testfiles/utils.tn"
+        import "./src/evaluator/__tests__/testfiles/utils.tn"
         a;
     `;
 
