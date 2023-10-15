@@ -13,4 +13,9 @@ let fact = fn(n) {
 let values = [1, 2, 3, 4, 5]
 let facts = map(values, fact)
 
-map(facts, print)
+let i = 0;
+loop {
+    if (i >= len(values) - 1) { break; }
+    let i = i + 1;
+    print("factorial of: ", values[i], " is: ", fact(i))
+}
