@@ -6,12 +6,13 @@ export const ObjectType = {
     BOOLEAN_OBJ: 'BOOLEAN',
     NULL_OBJ: 'NULL',
     ERROR_OBJ: 'ERROR',
-    RETUNR_OBJ: 'RETURN',
+    RETURN_OBJ: 'RETURN',
     FUNCTION_OBJ: 'FUNCTION',
     STRING_OBJ: 'STRING',
     BUILTIN_OBJ: 'BUILTIN',
     ARRAY_OBJ: 'ARRAY',
     HASH_OBJ: 'HASH',
+    BREAK_OBJ: 'BREAK',
 } as const;
 
 export type ObjectType = (typeof ObjectType)[keyof typeof ObjectType];
@@ -48,6 +49,24 @@ export class HashObj implements IObject {
         }
 
         return `{${res.join(', ')}}`;
+    }
+
+    isHashable(): boolean {
+        return false;
+    }
+
+    getHash(): string {
+        return '';
+    }
+}
+
+export class BreakObj implements IObject {
+    getType(): ObjectType {
+        return ObjectType.BREAK_OBJ;
+    }
+
+    toString(): string {
+        return 'break';
     }
 
     isHashable(): boolean {
@@ -207,7 +226,7 @@ export class ReturnObj implements IObject {
     }
 
     getType(): ObjectType {
-        return ObjectType.RETUNR_OBJ;
+        return ObjectType.RETURN_OBJ;
     }
 
     toString(): string {

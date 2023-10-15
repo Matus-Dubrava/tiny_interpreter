@@ -144,6 +144,26 @@ test('test parse loop expression', () => {
     expect(secondStmt).toBeInstanceOf(BreakStatement);
 });
 
+test('test parse loop expression with return statement', () => {
+    const input = `
+        let i = 0;
+        loop {
+            if (i > 10) {
+                return i;
+            }
+            let i = i + 1;
+        }
+    `;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(2);
+    const expr = getExpression(program.stmts[1]);
+    expect(expr).toBeInstanceOf(LoopExpression);
+});
+
 test('test parse array literal', () => {
     const input = '[1, 2 * 2, 3 + 3]';
 

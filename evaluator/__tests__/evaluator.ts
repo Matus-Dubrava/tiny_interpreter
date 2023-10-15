@@ -17,6 +17,40 @@ import { Evaluator } from '..';
 import { ProgramEnvironment } from '../../object/environment';
 import { exec } from 'child_process';
 
+test('test evaluate loop statement with return statement', () => {
+    const input = `
+        let i = 0;
+        loop {
+            if (i > 10) {
+                return i;
+            }
+            let i = i + 1;
+        }
+    `;
+
+    const evaluated = testEval(input);
+    expect(evaluated).toBeInstanceOf(IntObj);
+    testIntegerObject(evaluated as IntObj, 11);
+});
+
+test('test evaluate loop statement with break statement', () => {
+    const input = `
+        let i = 0;
+        loop {
+            if (i > 10) {
+                break;
+            }
+            let i = i + 1;
+        }
+        i;
+    `;
+
+    const evaluated = testEval(input);
+    console.log(evaluated);
+    expect(evaluated).toBeInstanceOf(IntObj);
+    testIntegerObject(evaluated as IntObj, 11);
+});
+
 test('test evaluate hash literal', () => {
     const input = `
         let two = "two";

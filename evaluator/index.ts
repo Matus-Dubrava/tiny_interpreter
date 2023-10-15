@@ -3,6 +3,7 @@ import { readFileSync } from 'fs';
 import {
     ArrayObj,
     BooleanObj,
+    BreakObj,
     BuiltinObj,
     ErrorObj,
     FunctionObject,
@@ -36,6 +37,8 @@ import {
     ImportStatement,
     ExitStatement,
     HashLiteral,
+    LoopExpression,
+    BreakStatement,
 } from '../ast';
 import {
     ProgramEnvironment,
@@ -86,9 +89,39 @@ export class Evaluator {
             return this.evaluateExitStatement(node);
         } else if (node instanceof HashLiteral) {
             return this.evaluateHashLiteral(node, env);
+        } else if (node instanceof LoopExpression) {
+            return this.evaluateLoopExpression(node, env);
+        } else if (node instanceof BreakStatement) {
+            return this.evaluateBreakStatement(node);
         }
 
         return Evaluator.getUnrecognizedStatementError(node);
+    }
+
+    evaluateBreakStatement(node: BreakStatement): IObject {
+        return new BreakObj();
+    }
+
+    evaluateLoopExpression(
+        node: LoopExpression,
+        env: ProgramEnvironment
+    ): IObject {
+        let result: IObject = NULL;
+        while (true) {
+            result = this.evaluateStatements(node.body.stmts, env);
+            if (result instanceof ErrorObj) {
+                return result;
+            }
+
+            if (result instanceof ReturnObj) {
+                return result;
+            }
+
+            if (result instanceof BreakObj) {
+                break;
+            }
+        }
+        return result;
     }
 
     evaluateHashLiteral(node: HashLiteral, env: ProgramEnvironment): IObject {
@@ -698,7 +731,11 @@ export class Evaluator {
 
         for (const stmt of stmts) {
             result = this.evaluate(stmt, env);
-            if (result instanceof ReturnObj || result instanceof ErrorObj) {
+            if (
+                result instanceof ReturnObj ||
+                result instanceof ErrorObj ||
+                result instanceof BreakObj
+            ) {
                 return result;
             }
         }
