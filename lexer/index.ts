@@ -37,6 +37,8 @@ export const TokenType = {
     String: 'STRING',
     LBracket: '[',
     RBracket: ']',
+    Loop: 'LOOP',
+    Break: 'BREAK',
 };
 
 export type TokenItem = (typeof TokenType)[keyof typeof TokenType];
@@ -56,6 +58,8 @@ const Keywords = {
     else: createToken(TokenType.Else, 'else'),
     import: createToken(TokenType.Import, 'import'),
     exit: createToken(TokenType.Exit, 'exit'),
+    loop: createToken(TokenType.Loop, 'loop'),
+    break: createToken(TokenType.Break, 'break'),
 } as const;
 
 function isLetter(letter: string): boolean {

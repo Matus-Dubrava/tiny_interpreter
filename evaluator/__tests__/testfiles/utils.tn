@@ -1,1 +1,1 @@
-let add = fn(x, y) { x + y };
+let a = 10;

@@ -41,6 +41,12 @@ test('test lexer with more input', () => {
         10 != 9;
         [1, 2];
         {"foo": "bar"};
+
+        loop {
+            if(true) {
+                break;
+            }
+        }
         `;
 
     const tokens = [
@@ -136,6 +142,23 @@ test('test lexer with more input', () => {
         { type: TokenType.String, literal: 'bar' },
         { type: TokenType.RBrace, literal: '}' },
         { type: TokenType.Semicolon, literal: ';' },
+
+        // loop {
+        //     if(true) {
+        //         break;
+        //     }
+        // }
+        { type: TokenType.Loop, literal: 'loop' },
+        { type: TokenType.LBrace, literal: '{' },
+        { type: TokenType.If, literal: 'if' },
+        { type: TokenType.LParen, literal: '(' },
+        { type: TokenType.True, literal: 'true' },
+        { type: TokenType.RParen, literal: ')' },
+        { type: TokenType.LBrace, literal: '{' },
+        { type: TokenType.Break, literal: 'break' },
+        { type: TokenType.Semicolon, literal: ';' },
+        { type: TokenType.RBrace, literal: '}' },
+        { type: TokenType.RBrace, literal: '}' },
 
         { type: TokenType.EOF, literal: '' },
     ];

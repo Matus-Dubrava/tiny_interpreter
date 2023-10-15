@@ -95,7 +95,7 @@ test('test hash index expression', () => {
 
 test('test import statement', () => {
     const input = `
-        import "./example_programs/utils.tn"
+        import "./evaluator/__tests__/testfiles/utils.tn"
         a;
     `;
 
