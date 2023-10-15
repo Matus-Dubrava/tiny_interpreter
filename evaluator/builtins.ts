@@ -144,10 +144,12 @@ Builtins.set(
 Builtins.set(
     'print',
     new BuiltinObj((...args: IObject[]): IObject => {
+        let res = '';
         for (const arg of args) {
-            console.log(arg.toString());
+            res += arg.toString();
         }
 
+        console.log(res);
         return NULL;
     })
 );

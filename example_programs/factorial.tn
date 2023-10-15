@@ -1,0 +1,16 @@
+import "./example_programs/utils.tn"
+
+print("computing factorial")
+
+let fact = fn(n) {
+    if (n < 1) {
+        return 1
+    } else {
+        return fact(n - 1) * n
+    }
+}
+
+let values = [1, 2, 3, 4, 5]
+let facts = map(values, fact)
+
+map(facts, print)

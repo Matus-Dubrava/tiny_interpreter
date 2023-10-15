@@ -1,5 +1,3 @@
-let a = 10;
-
 let map = fn(arr, f) {
     let iter = fn(arr, accumulated) {
         if (len(arr) == 0) {
