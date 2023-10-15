@@ -283,6 +283,44 @@ export class PrefixExpression implements IExpression {
     }
 }
 
+export class LoopExpression implements IExpression {
+    token: Token;
+    body: BlockStatement;
+
+    constructor(token: Token, body: BlockStatement) {
+        this.token = token;
+        this.body = body;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `loop {${this.body.toString()}}`;
+    }
+}
+
+export class BreakStatement implements IStatement {
+    token: Token;
+
+    constructor(token: Token) {
+        this.token = token;
+    }
+
+    statementNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        return `break`;
+    }
+}
+
 export class InfixExpression implements IExpression {
     token: Token;
     left: IExpression;

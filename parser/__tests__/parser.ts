@@ -1,6 +1,7 @@
 import { Lexer, TokenType } from '../../lexer';
 import {
     IExpression,
+    LoopExpression,
     IStatement,
     Let,
     Return,
@@ -19,6 +20,7 @@ import {
     ImportStatement,
     ExitStatement,
     HashLiteral,
+    BreakStatement,
 } from '../../ast';
 import { Parser } from '../index';
 
@@ -111,6 +113,35 @@ test('test operator precendece', () => {
         checkParseErrors(parser);
         expect(program.toString()).toEqual(expected);
     });
+});
+
+test('test parse loop expression', () => {
+    const input = `
+        loop {
+            1 + 2;
+            break;
+        }
+        let x = 5;
+    `;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(2);
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(LoopExpression);
+
+    const loopExpr = expr as LoopExpression;
+    expect(loopExpr.body.stmts.length).toEqual(2);
+
+    const firstStmt = loopExpr.body.stmts[0];
+    expect(firstStmt).toBeInstanceOf(ExpressionStatement);
+    const firstExpr = (firstStmt as ExpressionStatement).expr;
+    testInfixExpression(firstExpr, 1, '+', 2);
+
+    const secondStmt = loopExpr.body.stmts[1];
+    expect(secondStmt).toBeInstanceOf(BreakStatement);
 });
 
 test('test parse array literal', () => {

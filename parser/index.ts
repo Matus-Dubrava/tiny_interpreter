@@ -21,6 +21,8 @@ import {
     ImportStatement,
     ExitStatement,
     HashLiteral,
+    BreakStatement,
+    LoopExpression,
 } from '../ast';
 
 type PrefixParseFn = () => IExpression | null;
@@ -102,6 +104,10 @@ export class Parser {
         this.registerPrefixFn(
             TokenType.LBrace,
             this.parseHashLiteral.bind(this)
+        );
+        this.registerPrefixFn(
+            TokenType.Loop,
+            this.parseLoopExpression.bind(this)
         );
 
         this.registerInfixFn(
@@ -203,6 +209,8 @@ export class Parser {
             this.nextToken();
         }
 
+        this.expectCurTokenToBe(TokenType.RBrace);
+
         return new BlockStatement(curTok, stmts);
     }
 
@@ -216,9 +224,32 @@ export class Parser {
                 return this.parseImportStatement();
             case TokenType.Exit:
                 return this.parseExitStatement();
+            case TokenType.Break:
+                return this.parseBreakStatement();
             default:
                 return this.parseExpressionStatement();
         }
+    }
+
+    parseLoopExpression(): IExpression | null {
+        const curTok = this.curTok;
+        this.expectPeekTokenToBeAndAdvance(TokenType.LBrace);
+
+        const body = this.parseBlockStatement();
+
+        this.expectCurTokenToBe(TokenType.RBrace);
+
+        return new LoopExpression(curTok, body);
+    }
+
+    parseBreakStatement(): IStatement | null {
+        const curTok = this.curTok;
+
+        if (this.peekTok.type === TokenType.Semicolon) {
+            this.nextToken();
+        }
+
+        return new BreakStatement(curTok);
     }
 
     parseExitStatement(): IStatement | null {
