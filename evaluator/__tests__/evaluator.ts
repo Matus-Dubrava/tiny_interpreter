@@ -13,6 +13,17 @@ import { Parser } from '../../parser';
 import { Evaluator } from '..';
 import { ProgramEnvironment } from '../../object/environment';
 
+test('test import statement', () => {
+    const input = `
+        import "./example_programs/utils.tn"
+        a;
+    `;
+
+    const evaluated = testEval(input);
+    expect(evaluated).not.toBeNull();
+    testIntegerObject(evaluated!, 10);
+});
+
 test('test array index expression', () => {
     const tests = [
         {

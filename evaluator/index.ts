@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+
 import {
     ArrayObj,
     BooleanObj,
@@ -6,7 +8,6 @@ import {
     FunctionObject,
     IObject,
     IntObj,
-    NullObj,
     ReturnObj,
     StringObj,
 } from '../object';
@@ -30,6 +31,7 @@ import {
     CallExpression,
     ArrayLiteral,
     IndexExpression,
+    ImportStatement,
 } from '../ast';
 import {
     ProgramEnvironment,
@@ -37,6 +39,8 @@ import {
 } from '../object/environment';
 import { TRUE, FALSE, NULL } from '../object';
 import { Builtins } from './builtins';
+import { Lexer } from '../lexer';
+import { Parser } from '../parser';
 
 export class Evaluator {
     evaluate(node: INode, env: ProgramEnvironment): IObject {
@@ -72,9 +76,32 @@ export class Evaluator {
             return this.evaluateArrayLiteral(node, env);
         } else if (node instanceof IndexExpression) {
             return this.evaluateIndexExpression(node, env);
+        } else if (node instanceof ImportStatement) {
+            return this.evaluateImportStatement(node, env);
         }
 
         return Evaluator.getUnrecognizedStatementError(node);
+    }
+
+    evaluateImportStatement(
+        node: ImportStatement,
+        env: ProgramEnvironment
+    ): IObject {
+        const fileContents = readFileSync(node.fileName.value).toString();
+        const lexer = new Lexer(fileContents);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        if (parser.errors.length !== 0) {
+            return new ErrorObj(
+                `failed to import ${
+                    node.fileName.value
+                }\nparsing errors: ${parser.errors.join('\n')}`
+            );
+        }
+
+        // return this.evaluate(program, env);
+        this.evaluate(program, env);
+        return NULL;
     }
 
     evaluateIndexExpression(
