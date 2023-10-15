@@ -141,6 +141,17 @@ Builtins.set(
     })
 );
 
+Builtins.set(
+    'print',
+    new BuiltinObj((...args: IObject[]): IObject => {
+        for (const arg of args) {
+            console.log(arg.toString());
+        }
+
+        return NULL;
+    })
+);
+
 function getWrongNumberOfArgumentsError(
     received: number,
     expected: number
