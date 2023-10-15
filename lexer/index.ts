@@ -144,6 +144,9 @@ export class Lexer {
             case '/':
                 tok = createToken(TokenType.Slash, this.ch);
                 break;
+            case ':':
+                tok = createToken(TokenType.Colon, this.ch);
+                break;
             case '*':
                 tok = createToken(TokenType.Asterisk, this.ch);
                 break;

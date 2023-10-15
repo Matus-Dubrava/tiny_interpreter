@@ -95,6 +95,32 @@ export class Let implements IStatement {
     }
 }
 
+export class HashLiteral implements IExpression {
+    token: Token;
+    pairs: Map<IExpression, IExpression>;
+
+    constructor(token: Token, pairs: Map<IExpression, IExpression>) {
+        this.token = token;
+        this.pairs = pairs;
+    }
+
+    expressionNode(): void {}
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    toString(): string {
+        const pairs: string[] = [];
+
+        pairs.forEach((key, value) => {
+            pairs.push(`${key.toString()}: ${value.toString()}`);
+        });
+
+        return `{${pairs.join(', ')}}`;
+    }
+}
+
 export class ExitStatement implements IStatement {
     token: Token;
     exitCode: IntLiteral;

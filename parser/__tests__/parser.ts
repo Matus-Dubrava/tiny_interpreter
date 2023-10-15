@@ -18,6 +18,7 @@ import {
     IndexExpression,
     ImportStatement,
     ExitStatement,
+    HashLiteral,
 } from '../../ast';
 import { Parser } from '../index';
 
@@ -529,6 +530,77 @@ test('test parse simple import statement', () => {
     expect(program.stmts[0]).toBeInstanceOf(ImportStatement);
     const importStmt = program.stmts[0] as ImportStatement;
     testStringLiteral(importStmt.fileName, '../somefile.tn');
+});
+
+test('test parse hash stamement with string keys', () => {
+    const input = `{ "one": 1, "two": 2, "three": 3 }`;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(1);
+
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(HashLiteral);
+    const hashStmt = expr as HashLiteral;
+    expect(hashStmt.pairs.size).toEqual(3);
+
+    const expected = new Map<string, number>();
+    expected.set('one', 1);
+    expected.set('two', 2);
+    expected.set('three', 3);
+
+    for (const [key, value] of hashStmt.pairs) {
+        expect(key).toBeInstanceOf(StringLiteral);
+        const expectedValue = expected.get((key as StringLiteral).value);
+        expect(expectedValue).toBeDefined();
+        testIntExpr(value as IntLiteral, expectedValue!);
+    }
+});
+
+test('test parse hash stamement with integer keys', () => {
+    const input = `{ 1: 1, 2: 2, 3: 3 }`;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(1);
+
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(HashLiteral);
+    const hashStmt = expr as HashLiteral;
+    expect(hashStmt.pairs.size).toEqual(3);
+
+    const expected = new Map<string, number>();
+    expected.set('1', 1);
+    expected.set('2', 2);
+    expected.set('3', 3);
+
+    for (const [key, value] of hashStmt.pairs) {
+        expect(key).toBeInstanceOf(IntLiteral);
+        const expectedValue = expected.get(
+            (key as IntLiteral).value.toString()
+        );
+        expect(expectedValue).toBeDefined();
+        testIntExpr(value as IntLiteral, expectedValue!);
+    }
+});
+
+test('test parse empty hash statement', () => {
+    const input = '{}';
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+    expect(program.stmts.length).toEqual(1);
+
+    const expr = getExpression(program.stmts[0]);
+    expect(expr).toBeInstanceOf(HashLiteral);
+    const hashStmt = expr as HashLiteral;
+    expect(hashStmt.pairs.entries.length).toEqual(0);
 });
 
 test('test parse exit statement', () => {

@@ -20,6 +20,7 @@ import {
     IndexExpression,
     ImportStatement,
     ExitStatement,
+    HashLiteral,
 } from '../ast';
 
 type PrefixParseFn = () => IExpression | null;
@@ -97,6 +98,10 @@ export class Parser {
         this.registerPrefixFn(
             TokenType.LBracket,
             this.parseArrayLiteral.bind(this)
+        );
+        this.registerPrefixFn(
+            TokenType.LBrace,
+            this.parseHashLiteral.bind(this)
         );
 
         this.registerInfixFn(
@@ -367,6 +372,51 @@ export class Parser {
         }
 
         return expr;
+    }
+
+    parseHashLiteral(): IExpression | null {
+        const curTok = this.curTok;
+        const pairs: Map<IExpression, IExpression> = new Map<
+            IExpression,
+            IExpression
+        >();
+
+        while (this.peekTok.type !== TokenType.RBrace) {
+            this.nextToken();
+            const key = this.parseExpression(Precedence.LOWEST);
+            if (!key) {
+                return null;
+            }
+
+            if (!this.expectPeekTokenToBeAndAdvance(TokenType.Colon)) {
+                return null;
+            }
+
+            this.nextToken();
+            const value = this.parseExpression(Precedence.LOWEST);
+            if (!value) {
+                return null;
+            }
+
+            pairs.set(key, value);
+
+            if (
+                this.peekTok.type !== TokenType.Comma &&
+                this.peekTok.type !== TokenType.RBrace
+            ) {
+                return null;
+            }
+
+            if (this.peekTok.type === TokenType.Comma) {
+                this.nextToken();
+            }
+        }
+
+        if (!this.expectPeekTokenToBeAndAdvance(TokenType.RBrace)) {
+            return null;
+        }
+
+        return new HashLiteral(curTok, pairs);
     }
 
     parseArrayLiteral(): IExpression | null {
