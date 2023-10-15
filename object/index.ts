@@ -20,27 +20,7 @@ export type BuilinFunction = (...args: IObject[]) => IObject;
 export interface IObject {
     getType(): ObjectType;
     toString(): string;
-}
-
-export class HashKey {
-    type: IObject;
-    value: string;
-
-    constructor(type: IObject, value: string) {
-        this.type = type;
-        this.value = value;
-    }
-
-    static getHashKey(obj: IObject): HashKey {
-        if ('getHash' in obj) {
-            return new HashKey(obj, (obj as any).getHash() as string);
-        } else {
-            throw Error(`unhashable type: ${obj.getType()}`);
-        }
-    }
-}
-
-export interface IHashable {
+    isHashable(): boolean;
     getHash(): string;
 }
 
@@ -50,9 +30,9 @@ export type HashPair = {
 };
 
 export class HashObj implements IObject {
-    pairs: Map<HashKey, HashPair>;
+    pairs: Map<string, HashPair>;
 
-    constructor(pairs: Map<HashKey, HashPair>) {
+    constructor(pairs: Map<string, HashPair>) {
         this.pairs = pairs;
     }
 
@@ -69,9 +49,17 @@ export class HashObj implements IObject {
 
         return `{${res.join(', ')}}`;
     }
+
+    isHashable(): boolean {
+        return false;
+    }
+
+    getHash(): string {
+        return '';
+    }
 }
 
-export class IntObj implements IObject, IHashable {
+export class IntObj implements IObject {
     value: number;
 
     constructor(value: number) {
@@ -86,12 +74,16 @@ export class IntObj implements IObject, IHashable {
         return `${this.value}`;
     }
 
+    isHashable(): boolean {
+        return true;
+    }
+
     getHash(): string {
         return this.value.toString();
     }
 }
 
-export class StringObj implements IObject, IHashable {
+export class StringObj implements IObject {
     value: string;
 
     constructor(value: string) {
@@ -106,12 +98,16 @@ export class StringObj implements IObject, IHashable {
         return this.value;
     }
 
+    isHashable(): boolean {
+        return true;
+    }
+
     getHash(): string {
         return this.value;
     }
 }
 
-export class BooleanObj implements IObject, IHashable {
+export class BooleanObj implements IObject {
     value: boolean;
 
     constructor(value: boolean) {
@@ -124,6 +120,10 @@ export class BooleanObj implements IObject, IHashable {
 
     toString(): string {
         return `${this.value}`;
+    }
+
+    isHashable(): boolean {
+        return true;
     }
 
     getHash(): string {
@@ -141,6 +141,14 @@ export class NullObj implements IObject {
     toString(): string {
         return 'null';
     }
+
+    isHashable(): boolean {
+        return false;
+    }
+
+    getHash(): string {
+        return '';
+    }
 }
 
 export class BuiltinObj implements IObject {
@@ -156,6 +164,14 @@ export class BuiltinObj implements IObject {
 
     toString(): string {
         return 'builtin function';
+    }
+
+    isHashable(): boolean {
+        return false;
+    }
+
+    getHash(): string {
+        return '';
     }
 }
 
@@ -173,6 +189,14 @@ export class ErrorObj implements IObject {
     toString(): string {
         return `ERROR: ${this.value}`;
     }
+
+    isHashable(): boolean {
+        return false;
+    }
+
+    getHash(): string {
+        return '';
+    }
 }
 
 export class ReturnObj implements IObject {
@@ -188,6 +212,14 @@ export class ReturnObj implements IObject {
 
     toString(): string {
         return this.value.toString();
+    }
+
+    isHashable(): boolean {
+        return false;
+    }
+
+    getHash(): string {
+        return '';
     }
 }
 
@@ -215,6 +247,14 @@ export class FunctionObject implements IObject {
             .map((param) => param.toString())
             .join(', ')}) {\n${this.body.toString()}}\n`;
     }
+
+    isHashable(): boolean {
+        return false;
+    }
+
+    getHash(): string {
+        return '';
+    }
 }
 
 export class ArrayObj implements IObject {
@@ -229,6 +269,14 @@ export class ArrayObj implements IObject {
     }
     toString(): string {
         return `[${this.elements.map((el) => el.toString()).join(', ')}]`;
+    }
+
+    isHashable(): boolean {
+        return false;
+    }
+
+    getHash(): string {
+        return '';
     }
 }
 

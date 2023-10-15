@@ -2,17 +2,54 @@ import {
     ArrayObj,
     BooleanObj,
     ErrorObj,
+    FALSE,
     FunctionObject,
+    HashObj,
     IObject,
     IntObj,
     NullObj,
     StringObj,
+    TRUE,
 } from '../../object';
 import { Lexer } from '../../lexer';
 import { Parser } from '../../parser';
 import { Evaluator } from '..';
 import { ProgramEnvironment } from '../../object/environment';
 import { exec } from 'child_process';
+
+test('test evaluate hash literal', () => {
+    const input = `
+        let two = "two";
+        {
+            "one": 10 - 9,
+            two: 1 + 1,
+            "thr" + "ee": 6 / 2,
+            4: 4,
+            true: 5,
+            false: 6
+        }
+    `;
+
+    const evaluated = testEval(input);
+    expect(evaluated).toBeInstanceOf(HashObj);
+    const hash = evaluated as HashObj;
+
+    const expected = new Map<string, number>();
+    expected.set(new StringObj('one').getHash(), 1);
+    expected.set(new StringObj('two').getHash(), 2);
+    expected.set(new StringObj('three').getHash(), 3);
+    expected.set(new IntObj(4).getHash(), 4);
+    expected.set(TRUE.getHash(), 5);
+    expected.set(FALSE.getHash(), 6);
+
+    expect(hash.pairs.size).toEqual(expected.size);
+
+    for (const [expectedKey, expectedValue] of expected) {
+        const pair = hash.pairs.get(expectedKey);
+        expect(pair).toBeDefined();
+        testIntegerObject(pair!.value, expectedValue);
+    }
+});
 
 test('test import statement', () => {
     const input = `

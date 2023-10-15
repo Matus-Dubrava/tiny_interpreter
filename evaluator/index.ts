@@ -6,6 +6,8 @@ import {
     BuiltinObj,
     ErrorObj,
     FunctionObject,
+    HashObj,
+    HashPair,
     IObject,
     IntObj,
     ReturnObj,
@@ -33,6 +35,7 @@ import {
     IndexExpression,
     ImportStatement,
     ExitStatement,
+    HashLiteral,
 } from '../ast';
 import {
     ProgramEnvironment,
@@ -81,9 +84,36 @@ export class Evaluator {
             return this.evaluateImportStatement(node, env);
         } else if (node instanceof ExitStatement) {
             return this.evaluateExitStatement(node);
+        } else if (node instanceof HashLiteral) {
+            return this.evaluateHashLiteral(node, env);
         }
 
         return Evaluator.getUnrecognizedStatementError(node);
+    }
+
+    evaluateHashLiteral(node: HashLiteral, env: ProgramEnvironment): IObject {
+        const pairs = new Map<string, HashPair>();
+
+        for (const [nodeKey, nodeValue] of node.pairs) {
+            const key = this.evaluate(nodeKey, env);
+            if (key instanceof ErrorObj) {
+                return key;
+            }
+
+            if (!key.isHashable()) {
+                return new ErrorObj(`key '${key.toString()}' is not hashable`);
+            }
+
+            const value = this.evaluate(nodeValue, env);
+            if (value instanceof ErrorObj) {
+                return value;
+            }
+
+            const hashed = key.getHash();
+            pairs.set(hashed, { key, value });
+        }
+
+        return new HashObj(pairs);
     }
 
     evaluateExitStatement(node: ExitStatement): IObject {
