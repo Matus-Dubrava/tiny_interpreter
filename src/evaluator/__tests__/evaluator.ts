@@ -46,7 +46,6 @@ test('test evaluate loop statement with break statement', () => {
     `;
 
     const evaluated = testEval(input);
-    console.log(evaluated);
     expect(evaluated).toBeInstanceOf(IntObj);
     testIntegerObject(evaluated as IntObj, 11);
 });
