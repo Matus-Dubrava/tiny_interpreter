@@ -656,21 +656,21 @@ function testEval(input: string): IObject | null {
     return evaluator.evaluate(program, env);
 }
 
-function testErrorObject(obj: IObject, expected: string): void {
+export function testErrorObject(obj: IObject, expected: string): void {
     expect(obj).toBeInstanceOf(ErrorObj);
     expect((obj as ErrorObj).value).toEqual(expected);
 }
 
-function testNullObject(obj: IObject): void {
+export function testNullObject(obj: IObject): void {
     expect(obj).toBeInstanceOf(NullObj);
 }
 
-function testBooleanObject(obj: IObject, expected: boolean): void {
+export function testBooleanObject(obj: IObject, expected: boolean): void {
     expect(obj).toBeInstanceOf(BooleanObj);
     expect((obj as BooleanObj).value).toEqual(expected);
 }
 
-function testIntegerObject(obj: IObject, expected: number): void {
+export function testIntegerObject(obj: IObject, expected: number): void {
     expect(obj).toBeInstanceOf(IntObj);
     expect((obj as IntObj).value).toEqual(expected);
 }
